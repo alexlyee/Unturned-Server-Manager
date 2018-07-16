@@ -32,7 +32,7 @@ REM                                      2> Significant changes, need to redo fi
 REM                                      3> Minor changes, nothing needed.
 														set VMajor=2
 														set VMiddle=5
-														set VMinor=0
+														set VMinor=1
 set V=%VMajor%.%VMiddle%.%VMinor%
 title Untured Server Manager! V%V%
 setlocal EnableDelayedExpansion EnableExtensions
