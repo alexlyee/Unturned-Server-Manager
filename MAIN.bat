@@ -1,7 +1,7 @@
 REM                     Yes I understand this program is free, free to copy and all.
 REM                      I hope you (as an awesome person) can keep my name on the product for it ^.^
 REM                       Feel free to make any modifications and submit them to me!! I'd love to credit you for helping out in the patch notes! And in the program! :)
-REM                        My project resources are at https://github.com/alexly123/Unturned-Server-Manager/tree/master
+REM                        My project resources are at https://github.com/alexlyee/Unturned-Server-Manager
 
 @echo off
 cls
@@ -31,8 +31,8 @@ REM                           1#.2#.3# - 1> Major changes, you need to reinstall
 REM                                      2> Significant changes, need to redo filesystem.
 REM                                      3> Minor changes, nothing needed.
 														set VMajor=2
-														set VMiddle=4
-														set VMinor=4
+														set VMiddle=5
+														set VMinor=0
 set V=%VMajor%.%VMiddle%.%VMinor%
 title Untured Server Manager! V%V%
 setlocal EnableDelayedExpansion EnableExtensions
@@ -68,6 +68,12 @@ REM                                              START \/
 cls
 echo.
 echo  // Starting...
+echo.
+echo  // Looking for updates...
+git init
+git remote add origin https://github.com/alexlyee/Unturned-Server-Manager
+FOR /F "tokens=*" %%i IN ('git fetch --dry-run') DO SET X=%%i
+if /I NOT {%X%}=={} (goto :UpdateProgram)
 echo.
 echo  // Searching for Unturned...
 REM                                              Ensure Unturned isn't running \/
@@ -279,7 +285,7 @@ cls
 echo.
 echo  Use command shutdown once done loading.
 echo   // Type the command "shutdown" into the server once it is done loading for the first time.
-start "Use command shutdown once done loading." /D "%CD%\unturned" /MIN /HIGH /WAIT "%CD%\unturned\Unturned.exe" -nographics -batchmode +%servertype%/ManagedServer
+start "Use command shutdown once done loading." /D "%CD%\unturned" /MAX /HIGH /WAIT "%CD%\unturned\Unturned.exe" -nographics -batchmode +%servertype%/ManagedServer
 REM                                      setup server!
 set "Unturned="
 goto :start
@@ -820,8 +826,11 @@ if not {%password%}=={} (echo %password%>"%CD%\MAIN_res\password.txt")
 if exist "%CD%\MAIN_res\V.txt" (del "%CD%\MAIN_res\V.txt")
 echo %V%>"%CD%\MAIN_res\V.txt"
 echo.
-echo Done. :)  -  Press any key to exit.
-pause>nul
+echo Done. :)  -  Enter Y if you would like to see the github update page and close.
+echo  Anything else to close.
+set "choice="
+set /p "choice= - Enter option: "
+if /I {%choice%}=={Y} (start "" https://github.com/alexlyee/Unturned-Server-Manager/commits/master)
 goto :exit
 
 
@@ -860,10 +869,19 @@ for /f "tokens=*" %%A in ('set') do (
 exit "WellDone"
 
 REM GG!
+:UpdateProgram
+echo.
+echo  .. Updating...
+echo.
+git pull origin master
+echo.
+echo  Update completed! Restart. :)
+goto :exit
+
 
 :server
 echo.
 echo  -- Starting Server :) --
-start "Unturned Server" /D "%CD%\unturned" /MAX /HIGH "%CD%\unturned\Unturned.exe" -nographics -batchmode +%servertype%/ManagedServer
+start "Use command shutdown once done loading." /D "%CD%\unturned" /MAX /HIGH /WAIT "%CD%\unturned\Unturned.exe" -nographics -batchmode +%servertype%/ManagedServer
 echo.
 echo  
