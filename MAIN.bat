@@ -31,17 +31,11 @@ REM                           1#.2#.3# - 1> Major changes, you need to reinstall
 REM                                      2> Significant changes, need to redo filesystem.
 REM                                      3> Minor changes, nothing needed.
 														set VMajor=2
-														set VMiddle=5
-														set VMinor=1
+														set VMiddle=6
+														set VMinor=2
 set V=%VMajor%.%VMiddle%.%VMinor%
 title Untured Server Manager! V%V%
 setlocal EnableDelayedExpansion EnableExtensions
-REM                                              Update Checker. \/
-set /p Vfile=<"%CD%\MAIN_res\V.txt"
-for /f "tokens=1,2,3 delims=." %%A in ("%Vfile%") do (set "VfileMajor=%%A" & set "VfileMiddle=%%B" & set "VfileMinor=%%C")
-if not "%VfileMajor%"=="%VMajor%" (set "MajorUpdate=true")
-if not "%VfileMiddle%"=="%VMiddle%" (set "MiddleUpdate=true")
-if not "%VfileMinor%"=="%VMinor%" (set "MinorUpdate=true")
 REM                                              Get Time \/
 echo.
 echo  // Catching time...
@@ -63,17 +57,31 @@ if %12Hour% geq 12 (
   set /a "12Hour-=12"
 ) else set "AMPM=AM"
 if /I {%12Hour%}=={0} (set "12Hour=12")
+REM                                              Update Checker. \/
+echo.
+echo  // Searching for git install...
+WHERE git
+IF %ERRORLEVEL% NEQ 0 goto :InstallGIT
+echo.
+echo  // Looking for program update online... 
+git init
+git remote add origin https://github.com/alexlyee/Unturned-Server-Manager
+FOR /F "tokens=*" %%i IN ('git fetch --dry-run') DO SET X=%%i
+if /I NOT {%X%}=={} (goto :UpdateProgram)
+echo.
+echo  // Reading filesystem for updates...
+REM												 File need update? \/
+set /p Vfile=<"%CD%\MAIN_res\V.txt"
+for /f "tokens=1,2,3 delims=." %%A in ("%Vfile%") do (set "VfileMajor=%%A" & set "VfileMiddle=%%B" & set "VfileMinor=%%C")
+if not "%VfileMajor%"=="%VMajor%" (set "MajorUpdate=true")
+if not "%VfileMiddle%"=="%VMiddle%" (set "MiddleUpdate=true")
+if not "%VfileMinor%"=="%VMinor%" (set "MinorUpdate=true")
 REM                                              START \/
 :start
 cls
 echo.
 echo  // Starting...
 echo.
-echo  // Looking for updates...
-git init
-git remote add origin https://github.com/alexlyee/Unturned-Server-Manager
-FOR /F "tokens=*" %%i IN ('git fetch --dry-run') DO SET X=%%i
-if /I NOT {%X%}=={} (goto :UpdateProgram)
 echo.
 echo  // Searching for Unturned...
 REM                                              Ensure Unturned isn't running \/
@@ -181,10 +189,12 @@ echo  // Applying variables...
 set /p serverusername=<"%CD%\MAIN_res\username.txt"
 set /p serverpassword=<"%CD%\MAIN_res\password.txt"
 echo.
-echo  // Analyzing state of gamefiles...
+echo  // Checking for SteamCMD...
 REM                                              Install steamcmd if needed. \/
 if not {%SteamCMD%}=={true} (if EXIST "%CD%\steamcmd\steamcmd.exe" (goto :SkipSteamCMD))
 REM This will install and manage SteamCMD, which grabs updates for your game without the Steam client.
+cls
+echo.
 echo  The program will now // Install SteamCMD.
 echo  ...... This will install and manage SteamCMD, which grabs updates for your game without the Steam client.
 echo.
@@ -261,8 +271,11 @@ if NOT EXIST "%CD%\MAIN_res\email.txt" goto :SteamLoginBroke
 if NOT EXIST "%CD%\MAIN_res\steamid.txt" goto :SteamLoginBroke
 del /Q "%CD%\temp.txt"
 echo.
+echo  // Checking for Unturned...
 if not {%Unturned%}=={true} (if EXIST "%CD%\unturned" (goto :LS_SkipUnturned))
 :LS_UnturnedInstall
+cls
+echo.
 echo  The program will now // Deploy an Unturned server.
 echo  ...... This will use SteamCMD to download and install an unturned gamefile. Overwriting any current Unturned server.
 echo  ...... Ensure you are SUBSCRIBED to Unturned by logging in and pressing "Play".
@@ -291,6 +304,8 @@ set "Unturned="
 goto :start
 :LS_SkipUnturned
 REM Begin to use LS_ as the marker for before loadstart.
+echo.
+echo  // Finishing loading...
 set /p servertype=<"%CD%\MAIN_res\server.txt"
 set /p owneremail=<"%CD%\MAIN_res\email.txt"
 set /p ownersteamid=<"%CD%\MAIN_res\steamid.txt"
@@ -717,6 +732,26 @@ echo objADOStream.Close>>"%CD%\MAIN_res\steamcmd.vbs"
 echo Set objADOStream = Nothing>>"%CD%\MAIN_res\steamcmd.vbs"
 echo End if>>"%CD%\MAIN_res\steamcmd.vbs"
 echo Set objXMLHTTP = Nothing>>"%CD%\MAIN_res\steamcmd.vbs"
+REM  Github \/\/\/\/
+echo strFileURL="https://github.com/git-for-windows/git/releases/download/v2.18.0.windows.1/Git-2.18.0-64-bit.exe">"%CD%\MAIN_res\git.vbs"
+echo strHDLocation = "%CD%\MAIN_res\downloads\current.exe">>"%CD%\MAIN_res\git.vbs"
+echo Set objXMLHTTP = CreateObject("MSXML2.XMLHTTP")>>"%CD%\MAIN_res\git.vbs"
+echo objXMLHTTP.open "GET", strFileURL, false>>"%CD%\MAIN_res\git.vbs"
+echo objXMLHTTP.send()>>"%CD%\MAIN_res\git.vbs"
+echo If objXMLHTTP.Status = 200 Then>>"%CD%\MAIN_res\git.vbs"
+echo Set objADOStream = CreateObject("ADODB.Stream")>>"%CD%\MAIN_res\git.vbs"
+echo objADOStream.Open>>"%CD%\MAIN_res\git.vbs"
+echo objADOStream.Type = 1 >>"%CD%\MAIN_res\git.vbs"
+echo objADOStream.Write objXMLHTTP.ResponseBody>>"%CD%\MAIN_res\git.vbs"
+echo objADOStream.Position = 0 >>"%CD%\MAIN_res\git.vbs"
+echo Set objFSO = Createobject("Scripting.FileSystemObject")>>"%CD%\MAIN_res\git.vbs"
+echo If objFSO.Fileexists(strHDLocation) Then objFSO.DeleteFile(strHDLocation)>>"%CD%\MAIN_res\git.vbs"
+echo Set objFSO = Nothing>>"%CD%\MAIN_res\git.vbs"
+echo objADOStream.SaveToFile strHDLocation>>"%CD%\MAIN_res\git.vbs"
+echo objADOStream.Close>>"%CD%\MAIN_res\git.vbs"
+echo Set objADOStream = Nothing>>"%CD%\MAIN_res\git.vbs"
+echo End if>>"%CD%\MAIN_res\git.vbs"
+echo Set objXMLHTTP = Nothing>>"%CD%\MAIN_res\git.vbs"
 echo.
 echo  // Creating shortcuts...
 powershell "$s=(New-Object -COM WScript.Shell).CreateShortcut('%CD%\Rocket Website.lnk');$s.TargetPath='https://rocketmod.net/get-rocket#';$s.Save()"
@@ -884,4 +919,13 @@ echo.
 echo  -- Starting Server :) --
 start "Use command shutdown once done loading." /D "%CD%\unturned" /MAX /HIGH /WAIT "%CD%\unturned\Unturned.exe" -nographics -batchmode +%servertype%/ManagedServer
 echo.
-echo  
+goto :exit
+
+:InstallGIT
+echo.
+echo  Installing Git.
+echo  .. Git is used for updating this program automatically.
+echo  .. Please install git on to the command line, you may need to restart for this to work!
+echo  .. Press any key to exit. :)
+start "" https://git-scm.com/download/win
+pause >nul
