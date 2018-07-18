@@ -31,22 +31,16 @@ REM                           1#.2#.3# - 1> Major changes, you need to reinstall
 REM                                      2> Significant changes, need to redo filesystem.
 REM                                      3> Minor changes, nothing needed.
 														set VMajor=2
-														set VMiddle=5
-														set VMinor=2
+														set VMiddle=6
+														set VMinor=4
 set V=%VMajor%.%VMiddle%.%VMinor%
 title Untured Server Manager! V%V%
 setlocal EnableDelayedExpansion EnableExtensions
-REM                                              Update Checker. \/
-set /p Vfile=<"%CD%\MAIN_res\V.txt"
-for /f "tokens=1,2,3 delims=." %%A in ("%Vfile%") do (set "VfileMajor=%%A" & set "VfileMiddle=%%B" & set "VfileMinor=%%C")
-if not "%VfileMajor%"=="%VMajor%" (set "MajorUpdate=true")
-if not "%VfileMiddle%"=="%VMiddle%" (set "MiddleUpdate=true")
-if not "%VfileMinor%"=="%VMinor%" (set "MinorUpdate=true")
 REM                                              Get Time \/
 echo.
 echo  // Catching time...
 For /F "tokens=1,2,3,4 delims=:,. " %%A in ('echo %time%') do (
-  set "24Hour=%%A"
+  set "Hour24=%%A"
   set "Min=%%B"
   set "Sec=%%C"
   set "MSec=%%D"
@@ -57,23 +51,37 @@ For /F "tokens=1,2,3,4 delims=/ " %%A in ('Date /t') do (
   Set "Month=%%C"
   Set "Year=%%D"
 )
-set "12Hour=%24Hour%"
-if %12Hour% geq 12 (
+set "Hour12=%Hour24%"
+if %Hour12% geq 12 (
   set AMPM=PM
-  set /a "12Hour-=12"
+  set /a "Hour12-=12"
 ) else set "AMPM=AM"
-if /I {%12Hour%}=={0} (set "12Hour=12")
+if /I {%Hour12%}=={0} (set "Hour12=12")
+REM                                              Update Checker. \/
+echo.
+echo  // Searching for git install...
+WHERE git >Nul
+IF %ERRORLEVEL% NEQ 0 goto :InstallGIT
+echo.
+echo  // Looking for program update online... 
+git init  >Nul
+git remote set-url origin https://github.com/alexlyee/Unturned-Server-Manager
+FOR /F "tokens=* USEBACKQ" %%F IN (`git fetch --dry-run`) DO (SET gittemp=%%F)
+if /I NOT {%gittemp%}=={} (goto :UpdateProgram)
+echo.
+echo  // Reading filesystem for updates...
+REM												 File need update? \/
+set /p Vfile=<"%CD%\MAIN_res\V.txt"
+for /f "tokens=1,2,3 delims=." %%A in ("%Vfile%") do (set "VfileMajor=%%A" & set "VfileMiddle=%%B" & set "VfileMinor=%%C")
+if not "%VfileMajor%"=="%VMajor%" (set "MajorUpdate=true")
+if not "%VfileMiddle%"=="%VMiddle%" (set "MiddleUpdate=true")
+if not "%VfileMinor%"=="%VMinor%" (set "MinorUpdate=true")
 REM                                              START \/
 :start
-cls
 echo.
-echo  // Starting...
-echo.
-echo  // Looking for updates...
-git init>nul
-git remote add origin https://github.com/alexlyee/Unturned-Server-Manager >nul
-FOR /F "tokens=*" %%i IN ('git fetch --dry-run') DO SET X=%%i >nul
-if /I NOT {%X%}=={} (goto :UpdateProgram) >NUL
+echo  // // // Starting...
+REM Capturing starting time.
+set t0=%time: =0%
 echo.
 echo  // Searching for Unturned...
 REM                                              Ensure Unturned isn't running \/
@@ -85,7 +93,7 @@ set /a count=%count% + 1
 if NOT %count%==1 (goto :locatedtaskskip)
 echo.
 echo  Unturned is running currently.
-echo  1 // View plots and graphs on your server.
+echo  1 // View plots and graphs on your server. -- maybe i'll get this done, maybe i wont
 echo  2 // All unturned tasks will be shutdown forcefully.
 echo  Otherwise, it will return to the start and reprocess.
 echo.
@@ -104,13 +112,13 @@ for %%A in (search.txt) do (
 	)
 )
 if %count%==0 (
-	echo  No Unturned Tasks Found!
+	echo  .. No Unturned Tasks Found!
 ) else (
-	echo  No More Unturned Tasks Found!
+	echo  .. No More Unturned Tasks Found!
 )
 del search.txt
 echo.
-echo  // Is the filesystem done^?
+echo  // Are directories ready for the program?
 REM                                              Detect if files need refresh... \/
 if NOT EXIST "%CD%\MAIN_res\V.txt" (
 	echo.
@@ -120,6 +128,7 @@ if NOT EXIST "%CD%\MAIN_res\V.txt" (
 	set "build=true"
 	goto :build
 )
+echo  .. Yep
 REM                                              Analyze auto... \/
 echo.
 echo  // Finding set automations...
@@ -148,7 +157,7 @@ if EXIST  "%CD%\MAIN_res\plugins\plugins.txt" (
 )
 if NOT EXIST "%CD%\MAIN_res\plugins\plugins.txt" (set plugincount=0)
 echo.
-echo  //Does the filesystem need to be updated^?
+echo  // Is the system up-to-date^?
 REM                                              Detect if files need refresh... \/
 if /I {%MajorUpdate%}=={true} (
 	echo.
@@ -176,15 +185,18 @@ if /I NOT "%Dfile%"=="%~dp0" (
 	echo.
 	goto :build
 )
+echo  .. Yep
 echo.
 echo  // Applying variables...
 set /p serverusername=<"%CD%\MAIN_res\username.txt"
 set /p serverpassword=<"%CD%\MAIN_res\password.txt"
 echo.
-echo  // Analyzing state of gamefiles...
+echo  // Checking for SteamCMD...
 REM                                              Install steamcmd if needed. \/
 if not {%SteamCMD%}=={true} (if EXIST "%CD%\steamcmd\steamcmd.exe" (goto :SkipSteamCMD))
 REM This will install and manage SteamCMD, which grabs updates for your game without the Steam client.
+cls
+echo.
 echo  The program will now // Install SteamCMD.
 echo  ...... This will install and manage SteamCMD, which grabs updates for your game without the Steam client.
 echo.
@@ -208,7 +220,6 @@ echo.
 echo  Building SteamCMD filesystem... 
 echo   // To view progress, open the "Building SteamCMD filesystem..." window.
 >NUL start "Building SteamCMD filesystem..." /WAIT /MIN /HIGH "%CD%\steamcmd\steamcmd.exe" +exit
-goto :ResetSteamAccount
 :SteamLoginBroke
 echo.
 echo  I've opened up the error file, take a look. Close when you're done.
@@ -221,7 +232,7 @@ set "choice="
 set /P "choice= - "
 if /I {%choice%}=={1} (start "" https://store.steampowered.com/twofactor/manage)
 if /I {%choice%}=={2} (goto :ResetSteamAccount)
-goto :SkipSteamLoginBroke
+goto :SkipResetSteamAccount
 :ResetSteamAccount
 echo.
 echo  If you haven't yet, you may want to make a SEPERATE steam account for the server.
@@ -262,8 +273,11 @@ if NOT EXIST "%CD%\MAIN_res\email.txt" goto :SteamLoginBroke
 if NOT EXIST "%CD%\MAIN_res\steamid.txt" goto :SteamLoginBroke
 del /Q "%CD%\temp.txt"
 echo.
+echo  // Checking for Unturned...
 if not {%Unturned%}=={true} (if EXIST "%CD%\unturned" (goto :LS_SkipUnturned))
 :LS_UnturnedInstall
+cls
+echo.
 echo  The program will now // Deploy an Unturned server.
 echo  ...... This will use SteamCMD to download and install an unturned gamefile. Overwriting any current Unturned server.
 echo  ...... Ensure you are SUBSCRIBED to Unturned by logging in and pressing "Play".
@@ -292,19 +306,45 @@ set "Unturned="
 goto :start
 :LS_SkipUnturned
 REM Begin to use LS_ as the marker for before loadstart.
+echo.
+echo  // Finishing loading...
 set /p servertype=<"%CD%\MAIN_res\server.txt"
 set /p owneremail=<"%CD%\MAIN_res\email.txt"
 set /p ownersteamid=<"%CD%\MAIN_res\steamid.txt"
+@echo off
+REM Processing time to initialize.
+setlocal
+set t=%time: =0%
+
+set /a h=1%t0:~0,2%-100
+set /a m=1%t0:~3,2%-100
+set /a s=1%t0:~6,2%-100
+set /a c=1%t0:~9,2%-100
+set /a starttime = %h% * 360000 + %m% * 6000 + 100 * %s% + %c%
+
+set /a h=1%t:~0,2%-100
+set /a m=1%t:~3,2%-100
+set /a s=1%t:~6,2%-100
+set /a c=1%t:~9,2%-100
+set /a endtime = %h% * 360000 + %m% * 6000 + 100 * %s% + %c%
+
+set /a runtime = %endtime% - %starttime%
+set runtime = %s%.%c%
+REM converting to ms.
+set /a runtime = %runtime% * 10
 echo.
 echo  // Done^!
 cls
 :skiploadstart
 echo.
 echo  Unturned Server Manager V%V%  //  Made by Alex Lindstrom (steam~ alexlyee)
+echo                                 // took %runtime%ms to startup.
 echo  Logged in to %owneremail% %ownersteamid%. Hosting server type %servertype%
 echo.
+if EXIST "%CD%\MAIN_res\Hide.txt" goto :SkipYMenuMessage
 echo  Make sure you don't click inside of this program; whenever you select anything in CMD,
-echo  it pauses the script^! 
+echo  it pauses the script^! Type Y to hide this message.
+:SkipYMenuMessage
 echo.
 echo.
 echo  1 // Extract the newest Rocket mod.
@@ -319,7 +359,7 @@ echo.
 echo         /\
 echo         \/
 echo.
-echo  4 // Help me host.
+echo  4 // Help me host. // Under construction.
 echo  ...... This will help you in hosting Untured servers in any way possible.
 echo.
 echo  5 // Change settings.
@@ -339,6 +379,7 @@ echo.
 echo  9 // Edit the automatic updater and/or server restart system. // NOT WORKING
 echo  ...... This will enable the program to keep your mods updated and your server running with them. :^)
 echo.
+echo.
 set "choice="
 set /p "choice= - Pick: "
 if /I {%choice%}=={} (goto :exit)
@@ -351,6 +392,7 @@ if /I {%choice%}=={6} (goto :6)
 if /I {%choice%}=={7} (goto :7)
 if /I {%choice%}=={8} (goto :8)
 if /I {%choice%}=={9} (goto :9)
+if /I {%choice%}=={Y} (echo Hide) >"%CD%\MAIN_res\Hide.txt"
 goto :start
 REM /////////////////////////////////////////////////////// functions below
 :1
@@ -529,30 +571,35 @@ exit
 :4
 REM 50%!
 REM This will help you in hosting Untured servers in any way possible.
-SET holdHttpResponse=c:tempholdHttpResponse.txt
-SET holdExternalIP=”c:tempholdExternalIP.txt”
-SET getIP=”c:tempgetExternalIP.vbs”
-ECHO set WshShell = WScript.CreateObject(“WScript.Shell”) >> %getIP%
-ECHO WshShell.Run “cmd” >> %getIP%
-ECHO WScript.Sleep 100 >> %getIP%
-ECHO WshShell.AppActivate “{%}SystemRoot{%}system32cmd.exe” >> %getIP%
-ECHO WScript.Sleep 100 >> %getIP%
-ECHO WshShell.SendKeys “telnet -f %holdHttpResponse% checkip.dyndns.org 80~” >> %getIP%
-ECHO WScript.Sleep 100 >> %getIP%
-ECHO WshShell.SendKeys “GET / HTTP/1.0~” >> %getIP%
-ECHO WshShell.SendKeys “Host: checkip.dyndns.org~” >> %getIP%
-ECHO WshShell.SendKeys “~” >> %getIP%
-ECHO WshShell.SendKeys “~” >> %getIP%
-ECHO WScript.Sleep 1500 >> %getIP%
-ECHO WshShell.SendKeys “~” >> %getIP%
-ECHO WshShell.SendKeys “exit~” >> %getIP%
+@echo on
+SET holdHttpResponse="%CD%\tempholdHttpResponse.txt"
+SET holdExternalIP=”%CD%\tempholdExternalIP.txt”
+SET getIP=%cd:~0,2%\tempgetExternalIP.vbs
+ECHO set WshShell = WScript.CreateObject(%*WScript.Shell%*)>%cd:~0,2%\tempgetExternalIP.vbs
+ECHO WshShell.Run ^“cmd^” >>%getIP%
+ECHO WScript.Sleep 100 >>%getIP%
+ECHO WshShell.AppActivate “{%}SystemRoot{%}system32cmd.exe” >>%getIP%
+ECHO WScript.Sleep 100 >>%getIP%
+ECHO WshShell.SendKeys “telnet -f %holdHttpResponse% checkip.dyndns.org 80~” >>%getIP%
+ECHO WScript.Sleep 100 >>%getIP%
+ECHO WshShell.SendKeys “GET / HTTP/1.0~” >>%getIP%
+ECHO WshShell.SendKeys “Host: checkip.dyndns.org~” >>%getIP%
+ECHO WshShell.SendKeys “~” >>%getIP%
+ECHO WshShell.SendKeys “~” >>%getIP%
+ECHO WScript.Sleep 1500 >>%getIP%
+ECHO WshShell.SendKeys “~” >>%getIP%
+ECHO WshShell.SendKeys “exit~” >>%getIP%
+pause
 cscript //nologo %getIP%
+pause
 Findstr /I “Current” %holdHttpResponse% >> %holdExternalIP%
+pause
 For /F “usebackq tokens=2-5 delims=.:” %%I In (%holdExternalIP%) Do Set _ip=%%I.%%J.%%K.%%L
 Set ExternalIP=%_ip:~1,-14%
 DEL %getIP%
 DEL %holdHttpResponse%
 DEL %holdExternalIP%
+pause
 for /f "tokens=2 delims=:" %%a in ('ipconfig^|find "IPv4 Address"') do (set InternalIP=%%a)
 for /f "tokens=2 delims=:" %%a in ('ipconfig^|find "Default Gateway"') do (set DefaultGateway=%%a)
 echo.
@@ -718,6 +765,26 @@ echo objADOStream.Close>>"%CD%\MAIN_res\steamcmd.vbs"
 echo Set objADOStream = Nothing>>"%CD%\MAIN_res\steamcmd.vbs"
 echo End if>>"%CD%\MAIN_res\steamcmd.vbs"
 echo Set objXMLHTTP = Nothing>>"%CD%\MAIN_res\steamcmd.vbs"
+REM  Github \/\/\/\/
+echo strFileURL="https://github.com/git-for-windows/git/releases/download/v2.18.0.windows.1/Git-2.18.0-64-bit.exe">"%CD%\MAIN_res\git.vbs"
+echo strHDLocation = "%CD%\MAIN_res\downloads\current.exe">>"%CD%\MAIN_res\git.vbs"
+echo Set objXMLHTTP = CreateObject("MSXML2.XMLHTTP")>>"%CD%\MAIN_res\git.vbs"
+echo objXMLHTTP.open "GET", strFileURL, false>>"%CD%\MAIN_res\git.vbs"
+echo objXMLHTTP.send()>>"%CD%\MAIN_res\git.vbs"
+echo If objXMLHTTP.Status = 200 Then>>"%CD%\MAIN_res\git.vbs"
+echo Set objADOStream = CreateObject("ADODB.Stream")>>"%CD%\MAIN_res\git.vbs"
+echo objADOStream.Open>>"%CD%\MAIN_res\git.vbs"
+echo objADOStream.Type = 1 >>"%CD%\MAIN_res\git.vbs"
+echo objADOStream.Write objXMLHTTP.ResponseBody>>"%CD%\MAIN_res\git.vbs"
+echo objADOStream.Position = 0 >>"%CD%\MAIN_res\git.vbs"
+echo Set objFSO = Createobject("Scripting.FileSystemObject")>>"%CD%\MAIN_res\git.vbs"
+echo If objFSO.Fileexists(strHDLocation) Then objFSO.DeleteFile(strHDLocation)>>"%CD%\MAIN_res\git.vbs"
+echo Set objFSO = Nothing>>"%CD%\MAIN_res\git.vbs"
+echo objADOStream.SaveToFile strHDLocation>>"%CD%\MAIN_res\git.vbs"
+echo objADOStream.Close>>"%CD%\MAIN_res\git.vbs"
+echo Set objADOStream = Nothing>>"%CD%\MAIN_res\git.vbs"
+echo End if>>"%CD%\MAIN_res\git.vbs"
+echo Set objXMLHTTP = Nothing>>"%CD%\MAIN_res\git.vbs"
 echo.
 echo  // Creating shortcuts...
 powershell "$s=(New-Object -COM WScript.Shell).CreateShortcut('%CD%\Rocket Website.lnk');$s.TargetPath='https://rocketmod.net/get-rocket#';$s.Save()"
@@ -885,4 +952,13 @@ echo.
 echo  -- Starting Server :) --
 start "Use command shutdown once done loading." /D "%CD%\unturned" /MAX /HIGH /WAIT "%CD%\unturned\Unturned.exe" -nographics -batchmode +%servertype%/ManagedServer
 echo.
-echo  
+goto :exit
+
+:InstallGIT
+echo.
+echo  Installing Git.
+echo  .. Git is used for updating this program automatically.
+echo  .. Please install git on to the command line, you may need to restart for this to work!
+echo  .. Press any key to exit. :)
+start "" https://git-scm.com/download/win
+pause >nul
