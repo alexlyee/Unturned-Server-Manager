@@ -38,8 +38,6 @@ Automatic Updating system.
 
 Self maintaining system
 
-Automatic program updating system.
-
 (by this point the server when set up properly shouldn't ever need matenience!) :)
 
 Scheduled command making system. (Almost a custom plugin making system! No coding needed!)
