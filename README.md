@@ -18,11 +18,9 @@ Easy update of Unturned, Rocket, and all your plugins with one button!
 
 Clean organization of server files.
 
-Quick and easy display of all the server stats you would want!
+Assists with all you need to get your server up and running.
 
-One program that will make sure all you have to do for your server is make it what you want! By changing settings!
-
-
+You must change all the server settings under "unturned\Servers\ManagedServer"
 
 .... Current limitations:
 
