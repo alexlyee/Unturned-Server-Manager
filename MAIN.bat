@@ -32,7 +32,7 @@ REM                                      2> Significant changes, need to redo fi
 REM                                      3> Minor changes, nothing needed.
 														set VMajor=2
 														set VMiddle=8
-														set VMinor=8
+														set VMinor=10
 set V=%VMajor%.%VMiddle%.%VMinor%
 title Untured Server Manager! V%V%
 setlocal EnableDelayedExpansion EnableExtensions
@@ -64,11 +64,11 @@ WHERE git >Nul
 IF %ERRORLEVEL% NEQ 0 goto :InstallGIT
 echo.
 echo  // Looking for program update online... 
-git init
-git remote add master https://github.com/alexlyee/Unturned-Server-Manager
-for /f %%a in ('git pull --allow-unrelated-histories -f https://github.com/alexlyee/Unturned-Server-Manager master ^| findstr "Please move or remove them before you merge."') do (
-    set update=%%a
-)
+>nul git init
+>nul git remote add master https://github.com/alexlyee/Unturned-Server-Manager
+for /f %%a in ('git pull --allow-unrelated-histories -f https://github.com/alexlyee/Unturned-Server-Manager master ^| findstr "Updating"') do set update=%%a
+echo Network IP: %update%
+
 if /I NOT {%update%}=={} (goto :UpdateProgram)
 echo.
 echo  // Reading filesystem for updates...
@@ -935,15 +935,20 @@ REM GG!
 echo.
 echo  .. Updating...
 echo.
-del "%CD%\MAIN.bat"
-del "%CD%\icon.ico"
-del "%CD%\README.md"
-git pull --allow-unrelated-histories -f https://github.com/alexlyee/Unturned-Server-Manager master
-echo.
-echo  Update completed! Restart. :)
+echo del /F /Q "%CD%\MAIN.bat">"%CD%\update.bat"
+echo del /F /Q "%CD%\icon.ico">>"%CD%\update.bat"
+echo del /F /Q "%CD%\README.md">>"%CD%\update.bat"
+echo git init>>"%CD%\update.bat"
+echo git remote add master https://github.com/alexlyee/Unturned-Server-Manager>>"%CD%\update.bat"
+echo git pull --allow-unrelated-histories -f https://github.com/alexlyee/Unturned-Server-Manager master>>"%CD%\update.bat"
+echo del /F /Q "%CD%\update.bat">>"%CD%\update.bat"
+echo  Update script built. Running it.
+update.bat
+echo  That should be it^!
+pause
 goto :exit
 
-
+s
 :server
 echo.
 echo  -- Starting Server :) --
