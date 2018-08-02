@@ -220,34 +220,35 @@ echo.
 echo  Building SteamCMD filesystem... 
 echo   // To view progress, open the "Building SteamCMD filesystem..." window.
 >NUL start "Building SteamCMD filesystem..." /WAIT /MIN /HIGH "%CD%\steamcmd\steamcmd.exe" +exit
-:SteamLoginBroke
-echo.
-echo  I've opened up the error file, take a look. Close when you're done.
-notepad "%CD%\temp.txt"
-echo  I've noticed the most simple error is steam gaurd.
-echo  // Enter 1 if you want me to take you to the page to disable it!
-echo  // Enter 2 if you want to reset your username and password!
-echo  // Enter anything else to continue.
-set "choice="
-set /P "choice= - "
-if /I {%choice%}=={1} (start "" https://store.steampowered.com/twofactor/manage)
-if /I {%choice%}=={2} (goto :ResetSteamAccount)
-goto :SkipResetSteamAccount
-:ResetSteamAccount
-echo.
-echo  If you haven't yet, you may want to make a SEPERATE steam account for the server.
-echo  Use an email you would want to check for info on your server.
-echo  You will need to have one, make sure it has Unturned.
-echo.
-set /p "username= Enter your Steam username: "
-set /p "password= Enter your Steam password: "
-echo.
-echo  Applying...
-goto :SkipBuildPlugins
-:SkipResetSteamAccount
-del /Q "%CD%\temp.txt"
-echo  Sending you back to the login process...
-:SkipSteamLoginBroke
+goto :SkipSteamLoginBroke
+	:SteamLoginBroke
+	echo.
+	echo  I've opened up the error file, take a look. Close when you're done.
+	notepad "%CD%\temp.txt"
+	echo  I've noticed the most simple error is steam gaurd.
+	echo  // Enter 1 if you want me to take you to the page to disable it!
+	echo  // Enter 2 if you want to reset your username and password!
+	echo  // Enter anything else to continue.
+	set "choice="
+	set /P "choice= - "
+	if /I {%choice%}=={1} (start "" https://store.steampowered.com/twofactor/manage)
+	if /I {%choice%}=={2} (goto :ResetSteamAccount)
+	goto :SkipResetSteamAccount
+	:ResetSteamAccount
+	echo.
+	echo  If you haven't yet, you may want to make a SEPERATE steam account for the server.
+	echo  Use an email you would want to check for info on your server.
+	echo  You will need to have one, make sure it has Unturned.
+	echo.
+	set /p "username= Enter your Steam username: "
+	set /p "password= Enter your Steam password: "
+	echo.
+	echo  Applying...
+	goto :SkipBuildPlugins
+	:SkipResetSteamAccount
+	del /Q "%CD%\temp.txt"
+	echo  Sending you back to the login process...
+	:SkipSteamLoginBroke
 echo.
 echo  Logging you in for the first time...
 echo   // If it doesn't log you in right away:
