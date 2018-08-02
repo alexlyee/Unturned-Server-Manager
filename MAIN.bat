@@ -32,7 +32,7 @@ REM                                      2> Significant changes, need to redo fi
 REM                                      3> Minor changes, nothing needed.
 														set VMajor=2
 														set VMiddle=8
-														set VMinor=4
+														set VMinor=8
 set V=%VMajor%.%VMiddle%.%VMinor%
 title Untured Server Manager! V%V%
 setlocal EnableDelayedExpansion EnableExtensions
@@ -301,7 +301,7 @@ cls
 echo.
 echo  Use command shutdown once done loading.
 echo   // Type the command "shutdown" into the server once it is done loading for the first time.
-start "Use command shutdown once done loading." /D "%CD%\unturned" /MAX /HIGH /WAIT "%CD%\unturned\Unturned.exe" -nographics -batchmode +%servertype%/ManagedServer
+start "Use command shutdown once done loading." /D "%CD%\unturned" /MAX /HIGH /WAIT "%CD%\unturned\Unturned.exe" -nographics -batchmode +%servertype2%/ManagedServer
 REM                                      setup server!
 set "Unturned="
 goto :start
@@ -360,7 +360,7 @@ echo.
 echo         /\
 echo         \/
 echo.
-echo  4 // Help me host. // Under construction.
+echo  4 // Help me host.
 echo  ...... This will help you in hosting Untured servers in any way possible.
 echo.
 echo  5 // Change settings.
@@ -574,39 +574,26 @@ exit
 :4
 REM 50%!
 REM This will help you in hosting Untured servers in any way possible.
-@echo on
-SET holdHttpResponse="%CD%\tempholdHttpResponse.txt"
-SET holdExternalIP=”%CD%\tempholdExternalIP.txt”
-SET getIP=%cd:~0,2%\tempgetExternalIP.vbs
-ECHO set WshShell = WScript.CreateObject(%*WScript.Shell%*)>%cd:~0,2%\tempgetExternalIP.vbs
-ECHO WshShell.Run ^“cmd^” >>%getIP%
-ECHO WScript.Sleep 100 >>%getIP%
-ECHO WshShell.AppActivate “{%}SystemRoot{%}system32cmd.exe” >>%getIP%
-ECHO WScript.Sleep 100 >>%getIP%
-ECHO WshShell.SendKeys “telnet -f %holdHttpResponse% checkip.dyndns.org 80~” >>%getIP%
-ECHO WScript.Sleep 100 >>%getIP%
-ECHO WshShell.SendKeys “GET / HTTP/1.0~” >>%getIP%
-ECHO WshShell.SendKeys “Host: checkip.dyndns.org~” >>%getIP%
-ECHO WshShell.SendKeys “~” >>%getIP%
-ECHO WshShell.SendKeys “~” >>%getIP%
-ECHO WScript.Sleep 1500 >>%getIP%
-ECHO WshShell.SendKeys “~” >>%getIP%
-ECHO WshShell.SendKeys “exit~” >>%getIP%
-pause
-cscript //nologo %getIP%
-pause
-Findstr /I “Current” %holdHttpResponse% >> %holdExternalIP%
-pause
-For /F “usebackq tokens=2-5 delims=.:” %%I In (%holdExternalIP%) Do Set _ip=%%I.%%J.%%K.%%L
-Set ExternalIP=%_ip:~1,-14%
-DEL %getIP%
-DEL %holdHttpResponse%
-DEL %holdExternalIP%
-pause
+for /f "tokens=2 delims=: " %%A in (
+  'nslookup myip.opendns.com. resolver1.opendns.com 2^>NUL^|find "Address:"'
+) Do set ExternalIP=%%A
 for /f "tokens=2 delims=:" %%a in ('ipconfig^|find "IPv4 Address"') do (set InternalIP=%%a)
 for /f "tokens=2 delims=:" %%a in ('ipconfig^|find "Default Gateway"') do (set DefaultGateway=%%a)
 echo.
-echo  ExternalIP: %ExternalIP%
+echo  Assuming this system is connected to a router, through a modem:
+echo   - Make sure you have port forwarded the ports around your server (ex. 27015-27017)
+echo   - Ensure your firewall is not blocking these, ports. Visit the advanced firewall control and open them up for all traffic.
+echo   - Start by checking if you can connect to your server locally before you share it!
+echo       - Do this by direct connecting to your server from another computer.
+echo.
+echo  If you're still having issues:
+echo   - Check the modem, it is possible it is responsible for blocking traffic, 
+echo       - you may want to simply connect this server directly to the modem.
+echo   - Check the files, commands.dat should have a port and bind command in there.
+echo   - If you can't connect from this computer, the problem is with this computer.
+echo   - If you can connect from this subnet, but not outside it, the problem is most likely with the router.
+echo.
+echo  ExternalIP:  %ExternalIP%
 echo  InternalIP: %InternalIP%
 echo  Default Gateway: %DefaultGateway%
 echo.
