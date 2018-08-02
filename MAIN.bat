@@ -585,6 +585,8 @@ echo   - Make sure you have port forwarded the ports around your server (ex. 270
 echo   - Ensure your firewall is not blocking these, ports. Visit the advanced firewall control and open them up for all traffic.
 echo   - Start by checking if you can connect to your server locally before you share it!
 echo       - Do this by direct connecting to your server from another computer.
+echo   - You should create a static lease to this computer on your network.
+echo   - Although I've never found it useful, the DMZ zone may be of use if all else fails.
 echo.
 echo  If you're still having issues:
 echo   - Check the modem, it is possible it is responsible for blocking traffic, 
