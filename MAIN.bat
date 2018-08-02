@@ -31,7 +31,7 @@ REM                           1#.2#.3# - 1> Major changes, you need to reinstall
 REM                                      2> Significant changes, need to redo filesystem.
 REM                                      3> Minor changes, nothing needed.
 														set VMajor=2
-														set VMiddle=6
+														set VMiddle=8
 														set VMinor=4
 set V=%VMajor%.%VMiddle%.%VMinor%
 title Untured Server Manager! V%V%
@@ -413,7 +413,7 @@ echo  Applying Rocket to Unturned...
 >nul robocopy /move /e "%CD%\MAIN_res\unzipped\current" "%CD%\unturned"
 echo.
 echo  Deleting unzipped folder...
-rmdir /S /Q "%CD%\MAIN_res\unzipped\current"
+>nul rmdir /S /Q "%CD%\MAIN_res\unzipped\current"
 echo.
 pause
 goto :start
@@ -452,7 +452,7 @@ goto :start
 	echo  Go to the rocket plugins page, and find all of the plugins.
 	echo.
 	echo  For EACH PLUGIN, look at the link, like: 
-	echo  "https://dev.rocketmod.net/plugins/PLUGINNAME/"
+	echo  "https://hub.rocketmod.net/product/plugins/PLUGINNAME/"
 	echo  Enter the "PLUGINNAME" part of the link as the plugin only^! Otherwise this won't work^!
 	echo.
 	echo  This will completely delete the list and them add them all back, so add all the plugins here!
@@ -492,8 +492,10 @@ goto :start
 				set "tempplugin=!plugin%%A!"
 			)
 		)
-		echo  // Creating download script for %tempplugin%... %count%/%plugincount%.
-		echo strFileURL="https://dev.rocketmod.net/plugins/%tempplugin%/latest.zip">"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
+		echo.
+		echo  // Developing download script for %tempplugin%... %count%/%plugincount%.
+		del /Q "%CD%\MAIN_res\plugins\%tempplugin%.vbs" >nul
+		echo strFileURL="https://hub.rocketmod.net/product/%tempplugin%/latest.zip">"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
 		echo strHDLocation = "%CD%\MAIN_res\downloads\current.zip">>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
 		echo Set objXMLHTTP = CreateObject("MSXML2.XMLHTTP")>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
 		echo objXMLHTTP.open "GET", strFileURL, false>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
@@ -549,7 +551,7 @@ goto :start
 	echo   // Applying plugin...
 	>nul robocopy /move /e "%CD%\MAIN_res\unzipped\current" "%CD%\unturned\Servers\ManagedServer\Rocket\Plugins"
 	echo  // Cleaning up remnence...
-	rmdir /S /Q "%CD%\MAIN_res\unzipped\current">nul
+	>nul rmdir /S /Q "%CD%\MAIN_res\unzipped\current"
 	if NOT %count%==%plugincount% (goto :22loop)
 	:22loopend
 	echo.
@@ -787,7 +789,7 @@ echo End if>>"%CD%\MAIN_res\git.vbs"
 echo Set objXMLHTTP = Nothing>>"%CD%\MAIN_res\git.vbs"
 echo.
 echo  // Creating shortcuts...
-powershell "$s=(New-Object -COM WScript.Shell).CreateShortcut('%CD%\Rocket Website.lnk');$s.TargetPath='https://rocketmod.net/get-rocket#';$s.Save()"
+powershell "$s=(New-Object -COM WScript.Shell).CreateShortcut('%CD%\Rocket Website.lnk');$s.TargetPath='https://hub.rocketmod.net/';$s.Save()"
 powershell "$s=(New-Object -COM WScript.Shell).CreateShortcut('%CD%\Server Files.lnk');$s.TargetPath='%CD%\unturned\Servers\ManagedServer';$s.Save()"
 powershell "$s=(New-Object -COM WScript.Shell).CreateShortcut('%CD%\Server Manager.lnk');$s.WindowStyle=2;$s.TargetPath='%CD%\MAIN.bat';$s.IconLocation = '%CD%\MAIN_res\icon.ico';$s.Description ='Runs Server Manager Program';$s.WorkingDirectory ='%CD%';$s.Save()"
 echo.
@@ -860,9 +862,9 @@ for /l %%A in (1,1,%plugincount%) do (
 	)
 )
 echo.
-echo  // Creating download script for %tempplugin%... %count%/%plugincount%.
+echo  // Developing download script for %tempplugin%... %count%/%plugincount%.
 del /Q "%CD%\MAIN_res\plugins\%tempplugin%.vbs" >nul
-echo strFileURL="https://dev.rocketmod.net/plugins/%tempplugin%/latest.zip">"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
+echo strFileURL="https://hub.rocketmod.net/product/%tempplugin%/latest.zip">"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
 echo strHDLocation = "%CD%\MAIN_res\downloads\current.zip">>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
 echo Set objXMLHTTP = CreateObject("MSXML2.XMLHTTP")>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
 echo objXMLHTTP.open "GET", strFileURL, false>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"

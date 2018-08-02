@@ -38,8 +38,11 @@ Automatic Updating system.
 
 Self maintaining system
 
+<<<<<<< HEAD
 Automatic program updating system.
 
+=======
+>>>>>>> refs/remotes/origin/master
 (by this point the server when set up properly shouldn't ever need matenience!) :)
 
 Scheduled command making system. (Almost a custom plugin making system! No coding needed!)
