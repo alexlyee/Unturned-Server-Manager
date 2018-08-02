@@ -64,10 +64,12 @@ WHERE git >Nul
 IF %ERRORLEVEL% NEQ 0 goto :InstallGIT
 echo.
 echo  // Looking for program update online... 
-git init  >Nul
-git remote set-url origin https://github.com/alexlyee/Unturned-Server-Manager
-FOR /F "tokens=* USEBACKQ" %%F IN (`git fetch --dry-run`) DO (SET gittemp=%%F)
-if /I NOT {%gittemp%}=={} (goto :UpdateProgram)
+git init
+git remote add master https://github.com/alexlyee/Unturned-Server-Manager
+for /f %%a in ('git pull --allow-unrelated-histories -f https://github.com/alexlyee/Unturned-Server-Manager master ^| findstr "Please move or remove them before you merge."') do (
+    set update=%%a
+)
+if /I NOT {%update%}=={} (goto :UpdateProgram)
 echo.
 echo  // Reading filesystem for updates...
 REM												 File need update? \/
@@ -933,7 +935,10 @@ REM GG!
 echo.
 echo  .. Updating...
 echo.
-git pull origin master
+del "%CD%\MAIN.bat"
+del "%CD%\icon.ico"
+del "%CD%\README.md"
+git pull --allow-unrelated-histories -f https://github.com/alexlyee/Unturned-Server-Manager master
 echo.
 echo  Update completed! Restart. :)
 goto :exit
