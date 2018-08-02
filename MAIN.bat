@@ -32,7 +32,7 @@ REM                                      2> Significant changes, need to redo fi
 REM                                      3> Minor changes, nothing needed.
 														set VMajor=2
 														set VMiddle=8
-														set VMinor=11
+														set VMinor=12
 set V=%VMajor%.%VMiddle%.%VMinor%
 title Untured Server Manager! V%V%
 setlocal EnableDelayedExpansion EnableExtensions
@@ -942,7 +942,8 @@ echo git remote add master https://github.com/alexlyee/Unturned-Server-Manager>>
 echo git pull --allow-unrelated-histories -f https://github.com/alexlyee/Unturned-Server-Manager master>>"%CD%\update.bat"
 echo @echo off>>"%CD%\update.bat"
 echo echo. & echo.>>"%CD%\update.bat"
-echo  That should be it^! Take a look and see if that did it.>>"%CD%\update.bat"
+echo echo  /////////////////////////////////////// >>"%CD%\update.bat"
+echo echo  That should be it^! Take a look and see if that did it.>>"%CD%\update.bat"
 echo pause>>"%CD%\update.bat"
 echo del /F /Q "%CD%\update.bat">>"%CD%\update.bat"
 echo  Update script built. Running it.
