@@ -8,7 +8,7 @@
 - Produces all of the files it needs to operate.
 - Allows you to produce a clean, easy to manage server for Unturned.
 - Updates Unturned, rocket, and as many rocket mods as you would like!
-- Utilizes the MiniUPnP Project, Github, and various VB scripts to port foreward, auto-update, and more!
+- Utilizes the MiniUPnP Project, Github, and various VB scripts to port forward, auto-update, and more!
 
 
 ## .... Current features:
@@ -23,7 +23,7 @@ Assists with all you need to get your server up and running.
 
 You must change all the server settings under "unturned\Servers\ManagedServer"
 
-Automatic port-foreward
+Automatic port-forward
 
 Help-me-host
 
