@@ -27,6 +27,8 @@ Automatic port-forward
 
 Help-me-host
 
+Manage multiple servers by copying the program for each server
+
 
 ## .... Future plans:
 
