@@ -30,9 +30,9 @@ REM                                              Start Section \/
 REM                           1#.2#.3# - 1> Major changes, you need to reinstall.
 REM                                      2> Significant changes, need to redo filesystem.
 REM                                      3> Minor changes, nothing needed.
-														set VMajor=2
-														set VMiddle=8
-														set VMinor=12
+														set VMajor=3
+														set VMiddle=0
+														set VMinor=0
 set V=%VMajor%.%VMiddle%.%VMinor%
 title Untured Server Manager! V%V%
 setlocal EnableDelayedExpansion EnableExtensions
@@ -57,6 +57,55 @@ if %Hour12% geq 12 (
   set /a "Hour12-=12"
 ) else set "AMPM=AM"
 if /I {%Hour12%}=={0} (set "Hour12=12")
+REM                                                                                                            testing area...
+rem set "dev=true"
+if /I not {%dev%}=={true} goto :skipDevTest
+
+
+echo  .. Dev testing area pause.
+pause>nul'
+:skipDevTest
+REM end testing area...
+REM                                              Synchronization with MAIN.bat. \/ -- new with 3.0!
+set NAMEe=%~n0
+echo.
+echo  // Checking name for possible problems...
+if /I {%NAMEe%}=={MAIN} (
+echo  Please copy and rename this app [MAIN] to something for your server. Such as: ManagedServer
+ping 192.0.2.2 -n 1 -w 1000 > nul
+goto :exit
+)
+if /I {%NAMEe%}=={update} (
+echo  Please copy and rename this app [update] to something for your server. Such as: ManagedServer
+ping 192.0.2.2 -n 1 -w 1000 > nul
+goto :exit
+)
+echo.
+echo  // Looking for local update.
+if NOT EXIST MAIN.bat (
+echo   .. Oops^! This program can't run without MAIN.bat, please download it and move it to this folder.
+ping 192.0.2.2 -n 1 -w 1000 > nul
+goto :exit
+)
+echo  .. Dev mode check...
+REM                                               Dev mode check
+set devmode=false
+if exist "%CD%\%NAMEe%.key" (set "devmode=true")
+if /I {%devmode%}=={true} (
+echo  .. Developer mode enabled. This may be due to a failed start.
+echo  .. Program will continue in 4 seconds...
+ping 192.0.2.2 -n 1 -w 4000 > nul
+@echo on
+)
+REM STARTUP KEY HERE
+echo. >"%CD%\%NAMEe%.key"
+REM STARTUP KEY HERE
+fc /b MAIN.bat %NAMEe%.bat > nul
+if errorlevel 1 (
+    goto :MAINSync
+) else (
+    echo   .. Yep^!
+)
 REM                                              Update Checker. \/
 echo.
 echo  // Searching for git install...
@@ -72,7 +121,7 @@ echo .. All updated^!
 echo.
 echo  // Reading filesystem for updates...
 REM												 File need update? \/
-set /p Vfile=<"%CD%\MAIN_res\V.txt"
+set /p Vfile=<"%CD%\%NAMEe%_res\V.txt"
 for /f "tokens=1,2,3 delims=." %%A in ("%Vfile%") do (set "VfileMajor=%%A" & set "VfileMiddle=%%B" & set "VfileMinor=%%C")
 if not "%VfileMajor%"=="%VMajor%" (set "MajorUpdate=true")
 if not "%VfileMiddle%"=="%VMiddle%" (set "MiddleUpdate=true")
@@ -94,13 +143,11 @@ set /a count=%count% + 1
 if NOT %count%==1 (goto :locatedtaskskip)
 echo.
 echo  Unturned is running currently.
-echo  1 // View plots and graphs on your server. -- maybe i'll get this done, maybe i wont
-echo  2 // All unturned tasks will be shutdown forcefully.
+echo  1 // All unturned tasks will be shutdown forcefully.
 echo  Otherwise, it will return to the start and reprocess.
 echo.
 set /p "choice= - "
-if /I {%choice%}=={1} (goto :monitor)
-if /I NOT {%choice%}=={2} (goto :start)
+if /I NOT {%choice%}=={1} (goto :start)
 :locatedtaskskip
 echo Unturned task found^! Try %count%
 taskkill /IM Unturned.exe /F
@@ -121,7 +168,7 @@ del search.txt
 echo.
 echo  // Are directories ready for the program?
 REM                                              Detect if files need refresh... \/
-if NOT EXIST "%CD%\MAIN_res\V.txt" (
+if NOT EXIST "%CD%\%NAMEe%_res\V.txt" (
 	echo.
 	echo  Building program filesystem... [Filesystem not done]
 	echo  ...... This will compile the necessary files in this current directory for the program to function.
@@ -134,29 +181,29 @@ REM                                              Analyze auto... \/
 echo.
 echo  // Finding set automations...
 set autocount=0
-for /F "delims=" %%A in ('dir /b "%CD%\MAIN_res\auto"') do (
+for /F "delims=" %%A in ('dir /b "%CD%\%NAMEe%_res\auto"') do (
 	set /a "autocount=!autocount! + 1"
 	set "auto!autocount!=%%A"
-	for /F "tokens=1 delims=." %%B in ('dir /b "%CD%\MAIN_res\auto\%%A"') do (
+	for /F "tokens=1 delims=." %%B in ('dir /b "%CD%\%NAMEe%_res\auto\%%A"') do (
 		set "auto!autocount!.type=%%B"
 	)
 )
 REM                                              Analyze plugins... \/
 echo.
 echo  // Finding set plugins...
-if EXIST  "%CD%\MAIN_res\plugins\plugins.txt" (
-	set /p plugins=<"%CD%\MAIN_res\plugins\plugins.txt"
-	if /I {!plugins!}=={} (del "%CD%\MAIN_res\plugins\plugins.txt")
+if EXIST  "%CD%\%NAMEe%_res\plugins\plugins.txt" (
+	set /p plugins=<"%CD%\%NAMEe%_res\plugins\plugins.txt"
+	if /I {!plugins!}=={} (del "%CD%\%NAMEe%_res\plugins\plugins.txt")
 )
 set count=0
-if EXIST  "%CD%\MAIN_res\plugins\plugins.txt" (
-	for /F "usebackq tokens=*" %%A in ("%CD%\MAIN_res\plugins\plugins.txt") do (
+if EXIST  "%CD%\%NAMEe%_res\plugins\plugins.txt" (
+	for /F "usebackq tokens=*" %%A in ("%CD%\%NAMEe%_res\plugins\plugins.txt") do (
 		set /a "count=!count! + 1"
 		set "plugincount=!count!"
 		set "plugin!count!=%%A"
 	)
 )
-if NOT EXIST "%CD%\MAIN_res\plugins\plugins.txt" (set plugincount=0)
+if NOT EXIST "%CD%\%NAMEe%_res\plugins\plugins.txt" (set plugincount=0)
 echo.
 echo  // Is the system up-to-date^?
 REM                                              Detect if files need refresh... \/
@@ -175,10 +222,10 @@ if /I {%MiddleUpdate%}=={true} (
 	goto :build
 )
 if /I {%MinorUpdate%}=={true} (
-	del /Q "%CD%\MAIN_res\V.txt"
-	echo %V%>"%CD%\MAIN_res\V.txt"
+	del /Q "%CD%\%NAMEe%_res\V.txt"
+	echo %V%>"%CD%\%NAMEe%_res\V.txt"
 )
-set /p Dfile=<"%CD%\MAIN_res\Directory.txt"
+set /p Dfile=<"%CD%\%NAMEe%_res\Directory.txt"
 if /I NOT "%Dfile%"=="%~dp0" (
 	echo.
 	echo  Building program filesystem... [Change in directory]
@@ -189,8 +236,8 @@ if /I NOT "%Dfile%"=="%~dp0" (
 echo  .. Yep
 echo.
 echo  // Applying variables...
-set /p serverusername=<"%CD%\MAIN_res\username.txt"
-set /p serverpassword=<"%CD%\MAIN_res\password.txt"
+set /p serverusername=<"%CD%\%NAMEe%_res\username.txt"
+set /p serverpassword=<"%CD%\%NAMEe%_res\password.txt"
 echo.
 echo  // Checking for SteamCMD...
 REM                                              Install steamcmd if needed. \/
@@ -206,17 +253,17 @@ pause>nul
 :FixSteamCMD
 echo.
 echo  Downloading SteamCMD...
-cscript //nologo "%CD%\MAIN_res\steamcmd.vbs"
+cscript //nologo "%CD%\%NAMEe%_res\steamcmd.vbs"
 echo.
 echo  Extracting SteamCMD...
-cscript //nologo "%CD%\MAIN_res\extract.vbs"
+cscript //nologo "%CD%\%NAMEe%_res\extract.vbs"
 echo.
 echo  Deleting download...
->NUL del /f /q "%CD%\MAIN_res\downloads\current.zip"
+>NUL del /f /q "%CD%\%NAMEe%_res\downloads\current.zip"
 echo.
 echo  Moving SteamCMD to "%CD%\steamcmd"
 mkdir "%CD%\steamcmd"
->nul robocopy /move /e "%CD%\MAIN_res\unzipped\current" "%CD%\steamcmd"
+>nul robocopy /move /e "%CD%\%NAMEe%_res\unzipped\current" "%CD%\steamcmd"
 echo.
 echo  Building SteamCMD filesystem... 
 echo   // To view progress, open the "Building SteamCMD filesystem..." window.
@@ -264,15 +311,19 @@ set "choice="
 set /P "choice= - "
 if /I {%choice%}=={N} (goto :RetrySteamCMD)
 set "SteamCMD="
+if exist "%CD%\%NAMEe%.key" (
+del /F /Q "%CD%\%NAMEe%.key"
+echo      .. Deleted startup key.
+)
 goto :start
 :SkipSteamCMD
 echo.
 echo  // Attempting Steam Login...
 >"%CD%\temp.txt" call "%CD%\steamcmd\steamcmd.exe" +login %serverusername% %serverpassword% +info +quit
-for /f "skip=2 tokens=1,2,3" %%A in ('find "Email: " temp.txt') do (echo %%B>"%CD%\MAIN_res\email.txt")
-for /f "skip=2 tokens=1,2" %%A in ('find "SteamID: " temp.txt') do (echo %%B>"%CD%\MAIN_res\steamid.txt")
-if NOT EXIST "%CD%\MAIN_res\email.txt" goto :SteamLoginBroke
-if NOT EXIST "%CD%\MAIN_res\steamid.txt" goto :SteamLoginBroke
+for /f "skip=2 tokens=1,2,3" %%A in ('find "Email: " temp.txt') do (echo %%B>"%CD%\%NAMEe%_res\email.txt")
+for /f "skip=2 tokens=1,2" %%A in ('find "SteamID: " temp.txt') do (echo %%B>"%CD%\%NAMEe%_res\steamid.txt")
+if NOT EXIST "%CD%\%NAMEe%_res\email.txt" goto :SteamLoginBroke
+if NOT EXIST "%CD%\%NAMEe%_res\steamid.txt" goto :SteamLoginBroke
 del /Q "%CD%\temp.txt"
 echo.
 echo  // Checking for Unturned...
@@ -296,24 +347,31 @@ echo  Choose a type of server:
 echo  Is it a "lanserver", "secureserver", or "insecureserver"^?
 echo.
 set /p "servertype2= "
-echo %servertype2%>"%CD%\MAIN_res\server.txt"
+echo %servertype2%>"%CD%\%NAMEe%_res\server.txt"
 mkdir "%CD%\unturned\Servers"
 cls
 echo.
 echo  Use command shutdown once done loading.
 echo   // Type the command "shutdown" into the server once it is done loading for the first time.
-start "Use command shutdown once done loading." /D "%CD%\unturned" /MAX /HIGH /WAIT "%CD%\unturned\Unturned.exe" -nographics -batchmode +%servertype2%/ManagedServer
+start "Use command shutdown once done loading." /D "%CD%\unturned" /MAX /HIGH /WAIT "%CD%\unturned\Unturned.exe" -nographics -batchmode +%servertype2%/%NAMEe%
 REM                                      setup server!
 set "Unturned="
+if exist "%CD%\%NAMEe%.key" (
+del /F /Q "%CD%\%NAMEe%.key"
+echo      .. Deleted startup key.
+)
 goto :start
 :LS_SkipUnturned
 REM Begin to use LS_ as the marker for before loadstart.
 echo.
 echo  // Finishing loading...
-set /p servertype=<"%CD%\MAIN_res\server.txt"
-set /p owneremail=<"%CD%\MAIN_res\email.txt"
-set /p ownersteamid=<"%CD%\MAIN_res\steamid.txt"
-@echo off
+set /p servertype=<"%CD%\%NAMEe%_res\server.txt"
+set /p owneremail=<"%CD%\%NAMEe%_res\email.txt"
+set /p ownersteamid=<"%CD%\%NAMEe%_res\steamid.txt"
+if exist "%CD%\update.bat" (
+del /F /Q "%CD%\update.bat"
+echo   .. Deleted update.bat
+)
 REM Processing time to initialize.
 setlocal
 set t=%time: =0%
@@ -336,14 +394,21 @@ REM converting to ms.
 set /a runtime = %runtime% * 10
 echo.
 echo  // Done^!
-cls
+if /I {%devmode%}=={true} (
+@echo off
+echo  Developer mode has been enabled. This may have been as a result of a failed start. 
+) else (cls)
+if exist "%CD%\%NAMEe%.key" (
+del /F /Q "%CD%\%NAMEe%.key"
+echo      .. Deleted startup key.
+)
 :skiploadstart
 echo.
 echo  Unturned Server Manager V%V%  //  Made by Alex Lindstrom (steam~ alexlyee)
 echo                                 // took %runtime%ms to startup.
 echo  Logged in to %owneremail% %ownersteamid%. Hosting server type %servertype%
 echo.
-if EXIST "%CD%\MAIN_res\Hide.txt" goto :SkipYMenuMessage
+if EXIST "%CD%\%NAMEe%_res\Hide.txt" goto :SkipYMenuMessage
 echo  Make sure you don't click inside of this program; whenever you select anything in CMD,
 echo  it pauses the script^! Type Y to hide this message.
 :SkipYMenuMessage
@@ -383,7 +448,7 @@ echo  ...... This will enable the program to keep your mods updated and your ser
 echo.
 echo.
 set "choice="
-set /p "choice= - Pick: "
+set /p "choice= - 0 to enable/disable developer mode: "
 if /I {%choice%}=={} (goto :exit)
 if /I {%choice%}=={1} (goto :1)
 if /I {%choice%}=={2} (goto :2)
@@ -394,7 +459,7 @@ if /I {%choice%}=={6} (goto :6)
 if /I {%choice%}=={7} (goto :7)
 if /I {%choice%}=={8} (goto :8)
 if /I {%choice%}=={9} (goto :9)
-if /I {%choice%}=={Y} (echo Hide) >"%CD%\MAIN_res\Hide.txt"
+if /I {%choice%}=={Y} (echo Hide) >"%CD%\%NAMEe%_res\Hide.txt"
 goto :start
 REM /////////////////////////////////////////////////////// functions below
 :1
@@ -403,25 +468,25 @@ REM This will download and apply the newest Rocket mod file to Unturned.
 echo  If you see errors. Then it did not download correctly.
 echo.
 echo  Downloading the Rocket patch...
-cscript //nologo "%CD%\MAIN_res\rocket.vbs"
+cscript //nologo "%CD%\%NAMEe%_res\rocket.vbs"
 echo.
 echo  Unzipping the file...
-cscript //nologo "%CD%\MAIN_res\extract.vbs"
+cscript //nologo "%CD%\%NAMEe%_res\extract.vbs"
 echo.
 echo  Deleting download...
-del /f /q "%CD%\MAIN_res\downloads\current.zip"
+del /f /q "%CD%\%NAMEe%_res\downloads\current.zip"
 echo.
 echo  Applying Rocket to Unturned...
->nul robocopy /move /e "%CD%\MAIN_res\unzipped\current" "%CD%\unturned"
+>nul robocopy /move /e "%CD%\%NAMEe%_res\unzipped\current" "%CD%\unturned"
 echo.
 echo  Deleting unzipped folder...
->nul rmdir /S /Q "%CD%\MAIN_res\unzipped\current"
+>nul rmdir /S /Q "%CD%\%NAMEe%_res\unzipped\current"
 echo.
 pause
 goto :start
 :2
 REM This will download and apply the newest Rocket plugins you've set. Or set the plugins.
-if EXIST "%CD%\MAIN_res\plugins\plugins.txt" (goto :2skip)
+if EXIST "%CD%\%NAMEe%_res\plugins\plugins.txt" (goto :2skip)
 echo.
 echo  You may still have other plugins, this will only manage the one's you want for you.
 echo  You currently have no plugins to manage. If you would like to add some, type "Y".
@@ -461,7 +526,7 @@ goto :start
 	echo  If you want no plugins, type nothing.
 	echo.
 	set /p "plugins= "
-	if EXIST "%CD%\MAIN_res\plugins\plugins.txt" (del "%CD%\MAIN_res\plugins\plugins.txt")
+	if EXIST "%CD%\%NAMEe%_res\plugins\plugins.txt" (del "%CD%\%NAMEe%_res\plugins\plugins.txt")
 	set plugincount=0
 	for %%A in ("%plugins:,=" "%") do (
 		echo.
@@ -477,10 +542,10 @@ goto :start
 	for /l %%A in (1,1,%plugincount%) do (
 		echo  // Adding !plugin%%A! to plugin list... #%%A
 		if %%A==1 (
-			echo !plugin%%A!>"%CD%\MAIN_res\plugins\plugins.txt"
+			echo !plugin%%A!>"%CD%\%NAMEe%_res\plugins\plugins.txt"
 		)
 		if NOT %%A==1 (
-			echo !plugin%%A!>>"%CD%\MAIN_res\plugins\plugins.txt"
+			echo !plugin%%A!>>"%CD%\%NAMEe%_res\plugins\plugins.txt"
 		)
 	)
 	set count=0
@@ -496,26 +561,26 @@ goto :start
 		)
 		echo.
 		echo  // Developing download script for %tempplugin%... %count%/%plugincount%.
-		del /Q "%CD%\MAIN_res\plugins\%tempplugin%.vbs" >nul
-		echo strFileURL="https://hub.rocketmod.net/product/%tempplugin%/latest.zip">"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-		echo strHDLocation = "%CD%\MAIN_res\downloads\current.zip">>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-		echo Set objXMLHTTP = CreateObject("MSXML2.XMLHTTP")>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-		echo objXMLHTTP.open "GET", strFileURL, false>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-		echo objXMLHTTP.send()>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-		echo If objXMLHTTP.Status = 200 Then>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-		echo Set objADOStream = CreateObject("ADODB.Stream")>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-		echo objADOStream.Open>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-		echo objADOStream.Type = 1 >>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-		echo objADOStream.Write objXMLHTTP.ResponseBody>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-		echo objADOStream.Position = 0 >>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-		echo Set objFSO = Createobject("Scripting.FileSystemObject")>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-		echo If objFSO.Fileexists(strHDLocation) Then objFSO.DeleteFile(strHDLocation)>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-		echo Set objFSO = Nothing>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-		echo objADOStream.SaveToFile strHDLocation>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-		echo objADOStream.Close>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-		echo Set objADOStream = Nothing>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-		echo End if>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-		echo Set objXMLHTTP = Nothing>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
+		del /Q "%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs" >nul
+		echo strFileURL="https://hub.rocketmod.net/product/%tempplugin%/latest.zip">"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+		echo strHDLocation = "%CD%\%NAMEe%_res\downloads\current.zip">>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+		echo Set objXMLHTTP = CreateObject("MSXML2.XMLHTTP")>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+		echo objXMLHTTP.open "GET", strFileURL, false>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+		echo objXMLHTTP.send()>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+		echo If objXMLHTTP.Status = 200 Then>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+		echo Set objADOStream = CreateObject("ADODB.Stream")>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+		echo objADOStream.Open>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+		echo objADOStream.Type = 1 >>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+		echo objADOStream.Write objXMLHTTP.ResponseBody>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+		echo objADOStream.Position = 0 >>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+		echo Set objFSO = Createobject("Scripting.FileSystemObject")>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+		echo If objFSO.Fileexists(strHDLocation) Then objFSO.DeleteFile(strHDLocation)>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+		echo Set objFSO = Nothing>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+		echo objADOStream.SaveToFile strHDLocation>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+		echo objADOStream.Close>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+		echo Set objADOStream = Nothing>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+		echo End if>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+		echo Set objXMLHTTP = Nothing>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
 		if NOT %count%==%plugincount% (goto :21loop)
 		:21loopend
 	echo.
@@ -547,13 +612,13 @@ goto :start
 	)
 	echo      // Adding Plugin %count% - %tempplugin%
 	echo     // Downloading package...
-	cscript //nologo "%CD%\MAIN_res\plugins\%tempplugin%.vbs"
+	cscript //nologo "%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
 	echo    // Extracting file...
-	cscript //nologo "%CD%\MAIN_res\extract.vbs"
+	cscript //nologo "%CD%\%NAMEe%_res\extract.vbs"
 	echo   // Applying plugin...
-	>nul robocopy /move /e "%CD%\MAIN_res\unzipped\current" "%CD%\unturned\Servers\ManagedServer\Rocket\Plugins"
+	>nul robocopy /move /e "%CD%\%NAMEe%_res\unzipped\current" "%CD%\unturned\Servers\%NAMEe%\Rocket\Plugins"
 	echo  // Cleaning up remnence...
-	>nul rmdir /S /Q "%CD%\MAIN_res\unzipped\current"
+	>nul rmdir /S /Q "%CD%\%NAMEe%_res\unzipped\current"
 	if NOT %count%==%plugincount% (goto :22loop)
 	:22loopend
 	echo.
@@ -623,24 +688,24 @@ goto :start
 	set /p "username= Enter your Steam username: "
 	echo.
 	echo  Applying...
-	del "%CD%\MAIN_res\username.txt">nul
-	echo !username!>"%CD%\MAIN_res\username.txt"
+	del "%CD%\%NAMEe%_res\username.txt">nul
+	echo !username!>"%CD%\%NAMEe%_res\username.txt"
 	goto :start
 :52
 	echo.
 	set /p "password= Enter your Steam password: "
 	echo.
 	echo  Applying...
-	del "%CD%\MAIN_res\username.txt">nul
-	echo !password!>"%CD%\MAIN_res\username.txt"
+	del "%CD%\%NAMEe%_res\username.txt">nul
+	echo !password!>"%CD%\%NAMEe%_res\username.txt"
 	goto :start
 :53
 	echo.
 	echo  Is it a "lanserver", "secureserver", or "insecureserver"^?
 	echo.
 	set /p "servertype2= "
-	del "%CD%\MAIN_res\server.txt">nul
-	echo %servertype2%>"%CD%\MAIN_res\server.txt"
+	del "%CD%\%NAMEe%_res\server.txt">nul
+	echo %servertype2%>"%CD%\%NAMEe%_res\server.txt"
 	goto :start
 
 
@@ -730,81 +795,81 @@ REM changing the steam account you are linked to (the one stored) will
 :build
 echo.
 echo  / Generating folders...
-mkdir "%CD%\MAIN_res\downloads">NUL
-mkdir "%CD%\MAIN_res\plugins">NUL
-mkdir "%CD%\MAIN_res\unzipped">NUL
-mkdir "%CD%\MAIN_res\updater">NUL
-mkdir "%CD%\MAIN_res\logs">NUL
-mkdir "%CD%\MAIN_res\auto">NUL
-mkdir "%CD%\MAIN_res\backups">NUL
+mkdir "%CD%\%NAMEe%_res\downloads">NUL
+mkdir "%CD%\%NAMEe%_res\plugins">NUL
+mkdir "%CD%\%NAMEe%_res\unzipped">NUL
+mkdir "%CD%\%NAMEe%_res\updater">NUL
+mkdir "%CD%\%NAMEe%_res\logs">NUL
+mkdir "%CD%\%NAMEe%_res\auto">NUL
+mkdir "%CD%\%NAMEe%_res\backups">NUL
 echo.
 echo  / Forming download and extract scripts...
-echo strFileURL="https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip">"%CD%\MAIN_res\steamcmd.vbs"
-echo strHDLocation = "%CD%\MAIN_res\downloads\current.zip">>"%CD%\MAIN_res\steamcmd.vbs"
-echo Set objXMLHTTP = CreateObject("MSXML2.XMLHTTP")>>"%CD%\MAIN_res\steamcmd.vbs"
-echo objXMLHTTP.open "GET", strFileURL, false>>"%CD%\MAIN_res\steamcmd.vbs"
-echo objXMLHTTP.send()>>"%CD%\MAIN_res\steamcmd.vbs"
-echo If objXMLHTTP.Status = 200 Then>>"%CD%\MAIN_res\steamcmd.vbs"
-echo Set objADOStream = CreateObject("ADODB.Stream")>>"%CD%\MAIN_res\steamcmd.vbs"
-echo objADOStream.Open>>"%CD%\MAIN_res\steamcmd.vbs"
-echo objADOStream.Type = 1 >>"%CD%\MAIN_res\steamcmd.vbs"
-echo objADOStream.Write objXMLHTTP.ResponseBody>>"%CD%\MAIN_res\steamcmd.vbs"
-echo objADOStream.Position = 0 >>"%CD%\MAIN_res\steamcmd.vbs"
-echo Set objFSO = Createobject("Scripting.FileSystemObject")>>"%CD%\MAIN_res\steamcmd.vbs"
-echo If objFSO.Fileexists(strHDLocation) Then objFSO.DeleteFile(strHDLocation)>>"%CD%\MAIN_res\steamcmd.vbs"
-echo Set objFSO = Nothing>>"%CD%\MAIN_res\steamcmd.vbs"
-echo objADOStream.SaveToFile strHDLocation>>"%CD%\MAIN_res\steamcmd.vbs"
-echo objADOStream.Close>>"%CD%\MAIN_res\steamcmd.vbs"
-echo Set objADOStream = Nothing>>"%CD%\MAIN_res\steamcmd.vbs"
-echo End if>>"%CD%\MAIN_res\steamcmd.vbs"
-echo Set objXMLHTTP = Nothing>>"%CD%\MAIN_res\steamcmd.vbs"
+echo strFileURL="https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip">"%CD%\%NAMEe%_res\steamcmd.vbs"
+echo strHDLocation = "%CD%\%NAMEe%_res\downloads\current.zip">>"%CD%\%NAMEe%_res\steamcmd.vbs"
+echo Set objXMLHTTP = CreateObject("MSXML2.XMLHTTP")>>"%CD%\%NAMEe%_res\steamcmd.vbs"
+echo objXMLHTTP.open "GET", strFileURL, false>>"%CD%\%NAMEe%_res\steamcmd.vbs"
+echo objXMLHTTP.send()>>"%CD%\%NAMEe%_res\steamcmd.vbs"
+echo If objXMLHTTP.Status = 200 Then>>"%CD%\%NAMEe%_res\steamcmd.vbs"
+echo Set objADOStream = CreateObject("ADODB.Stream")>>"%CD%\%NAMEe%_res\steamcmd.vbs"
+echo objADOStream.Open>>"%CD%\%NAMEe%_res\steamcmd.vbs"
+echo objADOStream.Type = 1 >>"%CD%\%NAMEe%_res\steamcmd.vbs"
+echo objADOStream.Write objXMLHTTP.ResponseBody>>"%CD%\%NAMEe%_res\steamcmd.vbs"
+echo objADOStream.Position = 0 >>"%CD%\%NAMEe%_res\steamcmd.vbs"
+echo Set objFSO = Createobject("Scripting.FileSystemObject")>>"%CD%\%NAMEe%_res\steamcmd.vbs"
+echo If objFSO.Fileexists(strHDLocation) Then objFSO.DeleteFile(strHDLocation)>>"%CD%\%NAMEe%_res\steamcmd.vbs"
+echo Set objFSO = Nothing>>"%CD%\%NAMEe%_res\steamcmd.vbs"
+echo objADOStream.SaveToFile strHDLocation>>"%CD%\%NAMEe%_res\steamcmd.vbs"
+echo objADOStream.Close>>"%CD%\%NAMEe%_res\steamcmd.vbs"
+echo Set objADOStream = Nothing>>"%CD%\%NAMEe%_res\steamcmd.vbs"
+echo End if>>"%CD%\%NAMEe%_res\steamcmd.vbs"
+echo Set objXMLHTTP = Nothing>>"%CD%\%NAMEe%_res\steamcmd.vbs"
 REM  Github \/\/\/\/
-echo strFileURL="https://github.com/git-for-windows/git/releases/download/v2.18.0.windows.1/Git-2.18.0-64-bit.exe">"%CD%\MAIN_res\git.vbs"
-echo strHDLocation = "%CD%\MAIN_res\downloads\current.exe">>"%CD%\MAIN_res\git.vbs"
-echo Set objXMLHTTP = CreateObject("MSXML2.XMLHTTP")>>"%CD%\MAIN_res\git.vbs"
-echo objXMLHTTP.open "GET", strFileURL, false>>"%CD%\MAIN_res\git.vbs"
-echo objXMLHTTP.send()>>"%CD%\MAIN_res\git.vbs"
-echo If objXMLHTTP.Status = 200 Then>>"%CD%\MAIN_res\git.vbs"
-echo Set objADOStream = CreateObject("ADODB.Stream")>>"%CD%\MAIN_res\git.vbs"
-echo objADOStream.Open>>"%CD%\MAIN_res\git.vbs"
-echo objADOStream.Type = 1 >>"%CD%\MAIN_res\git.vbs"
-echo objADOStream.Write objXMLHTTP.ResponseBody>>"%CD%\MAIN_res\git.vbs"
-echo objADOStream.Position = 0 >>"%CD%\MAIN_res\git.vbs"
-echo Set objFSO = Createobject("Scripting.FileSystemObject")>>"%CD%\MAIN_res\git.vbs"
-echo If objFSO.Fileexists(strHDLocation) Then objFSO.DeleteFile(strHDLocation)>>"%CD%\MAIN_res\git.vbs"
-echo Set objFSO = Nothing>>"%CD%\MAIN_res\git.vbs"
-echo objADOStream.SaveToFile strHDLocation>>"%CD%\MAIN_res\git.vbs"
-echo objADOStream.Close>>"%CD%\MAIN_res\git.vbs"
-echo Set objADOStream = Nothing>>"%CD%\MAIN_res\git.vbs"
-echo End if>>"%CD%\MAIN_res\git.vbs"
-echo Set objXMLHTTP = Nothing>>"%CD%\MAIN_res\git.vbs"
+echo strFileURL="https://github.com/git-for-windows/git/releases/download/v2.18.0.windows.1/Git-2.18.0-64-bit.exe">"%CD%\%NAMEe%_res\git.vbs"
+echo strHDLocation = "%CD%\%NAMEe%_res\downloads\current.exe">>"%CD%\%NAMEe%_res\git.vbs"
+echo Set objXMLHTTP = CreateObject("MSXML2.XMLHTTP")>>"%CD%\%NAMEe%_res\git.vbs"
+echo objXMLHTTP.open "GET", strFileURL, false>>"%CD%\%NAMEe%_res\git.vbs"
+echo objXMLHTTP.send()>>"%CD%\%NAMEe%_res\git.vbs"
+echo If objXMLHTTP.Status = 200 Then>>"%CD%\%NAMEe%_res\git.vbs"
+echo Set objADOStream = CreateObject("ADODB.Stream")>>"%CD%\%NAMEe%_res\git.vbs"
+echo objADOStream.Open>>"%CD%\%NAMEe%_res\git.vbs"
+echo objADOStream.Type = 1 >>"%CD%\%NAMEe%_res\git.vbs"
+echo objADOStream.Write objXMLHTTP.ResponseBody>>"%CD%\%NAMEe%_res\git.vbs"
+echo objADOStream.Position = 0 >>"%CD%\%NAMEe%_res\git.vbs"
+echo Set objFSO = Createobject("Scripting.FileSystemObject")>>"%CD%\%NAMEe%_res\git.vbs"
+echo If objFSO.Fileexists(strHDLocation) Then objFSO.DeleteFile(strHDLocation)>>"%CD%\%NAMEe%_res\git.vbs"
+echo Set objFSO = Nothing>>"%CD%\%NAMEe%_res\git.vbs"
+echo objADOStream.SaveToFile strHDLocation>>"%CD%\%NAMEe%_res\git.vbs"
+echo objADOStream.Close>>"%CD%\%NAMEe%_res\git.vbs"
+echo Set objADOStream = Nothing>>"%CD%\%NAMEe%_res\git.vbs"
+echo End if>>"%CD%\%NAMEe%_res\git.vbs"
+echo Set objXMLHTTP = Nothing>>"%CD%\%NAMEe%_res\git.vbs"
 echo.
 echo  // Creating shortcuts...
 powershell "$s=(New-Object -COM WScript.Shell).CreateShortcut('%CD%\Rocket Website.lnk');$s.TargetPath='https://hub.rocketmod.net/';$s.Save()"
-powershell "$s=(New-Object -COM WScript.Shell).CreateShortcut('%CD%\Server Files.lnk');$s.TargetPath='%CD%\unturned\Servers\ManagedServer';$s.Save()"
-powershell "$s=(New-Object -COM WScript.Shell).CreateShortcut('%CD%\Server Manager.lnk');$s.WindowStyle=2;$s.TargetPath='%CD%\MAIN.bat';$s.IconLocation = '%CD%\MAIN_res\icon.ico';$s.Description ='Runs Server Manager Program';$s.WorkingDirectory ='%CD%';$s.Save()"
+powershell "$s=(New-Object -COM WScript.Shell).CreateShortcut('%CD%\Server Files.lnk');$s.TargetPath='%CD%\unturned\Servers\%NAMEe%';$s.Save()"
+powershell "$s=(New-Object -COM WScript.Shell).CreateShortcut('%CD%\Server Manager.lnk');$s.WindowStyle=2;$s.TargetPath='%CD%\%NAMEe%.bat';$s.IconLocation = '%CD%\%NAMEe%_res\icon.ico';$s.Description ='Runs Server Manager Program';$s.WorkingDirectory ='%CD%';$s.Save()"
 echo.
 echo  / ...
-echo strFileURL="https://ci.rocketmod.net/job/Rocket.Unturned/lastSuccessfulBuild/artifact/Rocket.Unturned/bin/Release/Rocket.zip">"%CD%\MAIN_res\rocket.vbs"
-echo strHDLocation = "%CD%\MAIN_res\downloads\current.zip">>"%CD%\MAIN_res\rocket.vbs"
-echo Set objXMLHTTP = CreateObject("MSXML2.XMLHTTP")>>"%CD%\MAIN_res\rocket.vbs"
-echo objXMLHTTP.open "GET", strFileURL, false>>"%CD%\MAIN_res\rocket.vbs"
-echo objXMLHTTP.send()>>"%CD%\MAIN_res\rocket.vbs"
-echo If objXMLHTTP.Status = 200 Then>>"%CD%\MAIN_res\rocket.vbs"
-echo Set objADOStream = CreateObject("ADODB.Stream")>>"%CD%\MAIN_res\rocket.vbs"
-echo objADOStream.Open>>"%CD%\MAIN_res\rocket.vbs"
-echo objADOStream.Type = 1 >>"%CD%\MAIN_res\rocket.vbs"
-echo objADOStream.Write objXMLHTTP.ResponseBody>>"%CD%\MAIN_res\rocket.vbs"
-echo objADOStream.Position = 0 >>"%CD%\MAIN_res\rocket.vbs"
-echo Set objFSO = Createobject("Scripting.FileSystemObject")>>"%CD%\MAIN_res\rocket.vbs"
-echo If objFSO.Fileexists(strHDLocation) Then objFSO.DeleteFile(strHDLocation)>>"%CD%\MAIN_res\rocket.vbs"
-echo Set objFSO = Nothing>>"%CD%\MAIN_res\rocket.vbs"
-echo objADOStream.SaveToFile strHDLocation>>"%CD%\MAIN_res\rocket.vbs"
-echo objADOStream.Close>>"%CD%\MAIN_res\rocket.vbs"
-echo Set objADOStream = Nothing>>"%CD%\MAIN_res\rocket.vbs"
-echo End if>>"%CD%\MAIN_res\rocket.vbs"
-echo Set objXMLHTTP = Nothing>>"%CD%\MAIN_res\rocket.vbs"
-if exist "%CD%\MAIN_res\username.txt" (goto :skipBuildInput)
+echo strFileURL="https://ci.rocketmod.net/job/Rocket.Unturned/lastSuccessfulBuild/artifact/Rocket.Unturned/bin/Release/Rocket.zip">"%CD%\%NAMEe%_res\rocket.vbs"
+echo strHDLocation = "%CD%\%NAMEe%_res\downloads\current.zip">>"%CD%\%NAMEe%_res\rocket.vbs"
+echo Set objXMLHTTP = CreateObject("MSXML2.XMLHTTP")>>"%CD%\%NAMEe%_res\rocket.vbs"
+echo objXMLHTTP.open "GET", strFileURL, false>>"%CD%\%NAMEe%_res\rocket.vbs"
+echo objXMLHTTP.send()>>"%CD%\%NAMEe%_res\rocket.vbs"
+echo If objXMLHTTP.Status = 200 Then>>"%CD%\%NAMEe%_res\rocket.vbs"
+echo Set objADOStream = CreateObject("ADODB.Stream")>>"%CD%\%NAMEe%_res\rocket.vbs"
+echo objADOStream.Open>>"%CD%\%NAMEe%_res\rocket.vbs"
+echo objADOStream.Type = 1 >>"%CD%\%NAMEe%_res\rocket.vbs"
+echo objADOStream.Write objXMLHTTP.ResponseBody>>"%CD%\%NAMEe%_res\rocket.vbs"
+echo objADOStream.Position = 0 >>"%CD%\%NAMEe%_res\rocket.vbs"
+echo Set objFSO = Createobject("Scripting.FileSystemObject")>>"%CD%\%NAMEe%_res\rocket.vbs"
+echo If objFSO.Fileexists(strHDLocation) Then objFSO.DeleteFile(strHDLocation)>>"%CD%\%NAMEe%_res\rocket.vbs"
+echo Set objFSO = Nothing>>"%CD%\%NAMEe%_res\rocket.vbs"
+echo objADOStream.SaveToFile strHDLocation>>"%CD%\%NAMEe%_res\rocket.vbs"
+echo objADOStream.Close>>"%CD%\%NAMEe%_res\rocket.vbs"
+echo Set objADOStream = Nothing>>"%CD%\%NAMEe%_res\rocket.vbs"
+echo End if>>"%CD%\%NAMEe%_res\rocket.vbs"
+echo Set objXMLHTTP = Nothing>>"%CD%\%NAMEe%_res\rocket.vbs"
+if exist "%CD%\%NAMEe%_res\username.txt" (goto :skipBuildInput)
 echo.
 echo  If you haven't yet, you may want to make a SEPERATE steam account for the server.
 echo  Use an email you would want to check for info on your server.
@@ -813,35 +878,35 @@ echo.
 set /p "username= Enter your Steam username: "
 set /p "password= Enter your Steam password: "
 :skipBuildInput
->"%CD%\MAIN_res\extract.vbs"  echo Set fso = CreateObject("Scripting.FileSystemObject")
->>"%CD%\MAIN_res\extract.vbs" echo If NOT fso.FolderExists("%CD%\MAIN_res\unzipped\current") Then
->>"%CD%\MAIN_res\extract.vbs" echo fso.CreateFolder("%CD%\MAIN_res\unzipped\current")
->>"%CD%\MAIN_res\extract.vbs" echo End If
->>"%CD%\MAIN_res\extract.vbs" echo set objShell = CreateObject("Shell.Application")
->>"%CD%\MAIN_res\extract.vbs" echo set FilesInZip=objShell.NameSpace("%CD%\MAIN_res\downloads\current.zip").items
->>"%CD%\MAIN_res\extract.vbs" echo objShell.NameSpace("%CD%\MAIN_res\unzipped\current").CopyHere(FilesInZip)
->>"%CD%\MAIN_res\extract.vbs" echo Set fso = Nothing
->>"%CD%\MAIN_res\extract.vbs" echo Set objShell = Nothing
-echo strFileURL="https://raw.githubusercontent.com/alexly123/Unturned-Server-Manager/master/icon.ico">"%CD%\MAIN_res\updater\icon.vbs"
-echo strHDLocation = "%CD%\MAIN_res\icon.ico">>"%CD%\MAIN_res\updater\icon.vbs"
-echo Set objXMLHTTP = CreateObject("MSXML2.XMLHTTP")>>"%CD%\MAIN_res\updater\icon.vbs"
-echo objXMLHTTP.open "GET", strFileURL, false>>"%CD%\MAIN_res\updater\icon.vbs"
-echo objXMLHTTP.send()>>"%CD%\MAIN_res\updater\icon.vbs"
-echo If objXMLHTTP.Status = 200 Then>>"%CD%\MAIN_res\updater\icon.vbs"
-echo Set objADOStream = CreateObject("ADODB.Stream")>>"%CD%\MAIN_res\updater\icon.vbs"
-echo objADOStream.Open>>"%CD%\MAIN_res\updater\icon.vbs"
-echo objADOStream.Type = 1 >>"%CD%\MAIN_res\updater\icon.vbs"
-echo objADOStream.Write objXMLHTTP.ResponseBody>>"%CD%\MAIN_res\updater\icon.vbs"
-echo objADOStream.Position = 0 >>"%CD%\MAIN_res\updater\icon.vbs"
-echo Set objFSO = Createobject("Scripting.FileSystemObject")>>"%CD%\MAIN_res\updater\icon.vbs"
-echo If objFSO.Fileexists(strHDLocation) Then objFSO.DeleteFile(strHDLocation)>>"%CD%\MAIN_res\updater\icon.vbs"
-echo Set objFSO = Nothing>>"%CD%\MAIN_res\updater\icon.vbs"
-echo objADOStream.SaveToFile strHDLocation>>"%CD%\MAIN_res\updater\icon.vbs"
-echo objADOStream.Close>>"%CD%\MAIN_res\updater\icon.vbs"
-echo Set objADOStream = Nothing>>"%CD%\MAIN_res\updater\icon.vbs"
-echo End if>>"%CD%\MAIN_res\updater\icon.vbs"
-echo Set objXMLHTTP = Nothing>>"%CD%\MAIN_res\updater\icon.vbs"
-if not exist "%CD%\MAIN_res\plugins\plugins.txt" (goto :SkipBuildPlugins)
+>"%CD%\%NAMEe%_res\extract.vbs"  echo Set fso = CreateObject("Scripting.FileSystemObject")
+>>"%CD%\%NAMEe%_res\extract.vbs" echo If NOT fso.FolderExists("%CD%\%NAMEe%_res\unzipped\current") Then
+>>"%CD%\%NAMEe%_res\extract.vbs" echo fso.CreateFolder("%CD%\%NAMEe%_res\unzipped\current")
+>>"%CD%\%NAMEe%_res\extract.vbs" echo End If
+>>"%CD%\%NAMEe%_res\extract.vbs" echo set objShell = CreateObject("Shell.Application")
+>>"%CD%\%NAMEe%_res\extract.vbs" echo set FilesInZip=objShell.NameSpace("%CD%\%NAMEe%_res\downloads\current.zip").items
+>>"%CD%\%NAMEe%_res\extract.vbs" echo objShell.NameSpace("%CD%\%NAMEe%_res\unzipped\current").CopyHere(FilesInZip)
+>>"%CD%\%NAMEe%_res\extract.vbs" echo Set fso = Nothing
+>>"%CD%\%NAMEe%_res\extract.vbs" echo Set objShell = Nothing
+echo strFileURL="https://raw.githubusercontent.com/alexly123/Unturned-Server-Manager/master/icon.ico">"%CD%\%NAMEe%_res\updater\icon.vbs"
+echo strHDLocation = "%CD%\%NAMEe%_res\icon.ico">>"%CD%\%NAMEe%_res\updater\icon.vbs"
+echo Set objXMLHTTP = CreateObject("MSXML2.XMLHTTP")>>"%CD%\%NAMEe%_res\updater\icon.vbs"
+echo objXMLHTTP.open "GET", strFileURL, false>>"%CD%\%NAMEe%_res\updater\icon.vbs"
+echo objXMLHTTP.send()>>"%CD%\%NAMEe%_res\updater\icon.vbs"
+echo If objXMLHTTP.Status = 200 Then>>"%CD%\%NAMEe%_res\updater\icon.vbs"
+echo Set objADOStream = CreateObject("ADODB.Stream")>>"%CD%\%NAMEe%_res\updater\icon.vbs"
+echo objADOStream.Open>>"%CD%\%NAMEe%_res\updater\icon.vbs"
+echo objADOStream.Type = 1 >>"%CD%\%NAMEe%_res\updater\icon.vbs"
+echo objADOStream.Write objXMLHTTP.ResponseBody>>"%CD%\%NAMEe%_res\updater\icon.vbs"
+echo objADOStream.Position = 0 >>"%CD%\%NAMEe%_res\updater\icon.vbs"
+echo Set objFSO = Createobject("Scripting.FileSystemObject")>>"%CD%\%NAMEe%_res\updater\icon.vbs"
+echo If objFSO.Fileexists(strHDLocation) Then objFSO.DeleteFile(strHDLocation)>>"%CD%\%NAMEe%_res\updater\icon.vbs"
+echo Set objFSO = Nothing>>"%CD%\%NAMEe%_res\updater\icon.vbs"
+echo objADOStream.SaveToFile strHDLocation>>"%CD%\%NAMEe%_res\updater\icon.vbs"
+echo objADOStream.Close>>"%CD%\%NAMEe%_res\updater\icon.vbs"
+echo Set objADOStream = Nothing>>"%CD%\%NAMEe%_res\updater\icon.vbs"
+echo End if>>"%CD%\%NAMEe%_res\updater\icon.vbs"
+echo Set objXMLHTTP = Nothing>>"%CD%\%NAMEe%_res\updater\icon.vbs"
+if not exist "%CD%\%NAMEe%_res\plugins\plugins.txt" (goto :SkipBuildPlugins)
 echo.
 echo  / Rebuilding plugin scripts...
 set count=0
@@ -854,40 +919,51 @@ for /l %%A in (1,1,%plugincount%) do (
 )
 echo.
 echo  // Developing download script for %tempplugin%... %count%/%plugincount%.
-del /Q "%CD%\MAIN_res\plugins\%tempplugin%.vbs" >nul
-echo strFileURL="https://hub.rocketmod.net/product/%tempplugin%/latest.zip">"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-echo strHDLocation = "%CD%\MAIN_res\downloads\current.zip">>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-echo Set objXMLHTTP = CreateObject("MSXML2.XMLHTTP")>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-echo objXMLHTTP.open "GET", strFileURL, false>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-echo objXMLHTTP.send()>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-echo If objXMLHTTP.Status = 200 Then>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-echo Set objADOStream = CreateObject("ADODB.Stream")>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-echo objADOStream.Open>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-echo objADOStream.Type = 1 >>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-echo objADOStream.Write objXMLHTTP.ResponseBody>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-echo objADOStream.Position = 0 >>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-echo Set objFSO = Createobject("Scripting.FileSystemObject")>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-echo If objFSO.Fileexists(strHDLocation) Then objFSO.DeleteFile(strHDLocation)>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-echo Set objFSO = Nothing>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-echo objADOStream.SaveToFile strHDLocation>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-echo objADOStream.Close>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-echo Set objADOStream = Nothing>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-echo End if>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
-echo Set objXMLHTTP = Nothing>>"%CD%\MAIN_res\plugins\%tempplugin%.vbs"
+del /Q "%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs" >nul
+echo strFileURL="https://hub.rocketmod.net/product/%tempplugin%/latest.zip">"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+echo strHDLocation = "%CD%\%NAMEe%_res\downloads\current.zip">>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+echo Set objXMLHTTP = CreateObject("MSXML2.XMLHTTP")>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+echo objXMLHTTP.open "GET", strFileURL, false>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+echo objXMLHTTP.send()>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+echo If objXMLHTTP.Status = 200 Then>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+echo Set objADOStream = CreateObject("ADODB.Stream")>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+echo objADOStream.Open>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+echo objADOStream.Type = 1 >>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+echo objADOStream.Write objXMLHTTP.ResponseBody>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+echo objADOStream.Position = 0 >>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+echo Set objFSO = Createobject("Scripting.FileSystemObject")>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+echo If objFSO.Fileexists(strHDLocation) Then objFSO.DeleteFile(strHDLocation)>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+echo Set objFSO = Nothing>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+echo objADOStream.SaveToFile strHDLocation>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+echo objADOStream.Close>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+echo Set objADOStream = Nothing>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+echo End if>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
+echo Set objXMLHTTP = Nothing>>"%CD%\%NAMEe%_res\plugins\%tempplugin%.vbs"
 if NOT %count%==%plugincount% (goto :StartBuildPlugins)
 :SkipBuildPlugins
 echo.
 echo  / Downloading icon...
-cscript //nologo "%CD%\MAIN_res\updater\icon.vbs"
+cscript //nologo "%CD%\%NAMEe%_res\updater\icon.vbs"
 echo.
 echo  / Adding program files...
-echo %~dp0>"%CD%\MAIN_res\Directory.txt"
-if not {%username%}=={} (echo %username%>"%CD%\MAIN_res\username.txt")
-if not {%password%}=={} (echo %password%>"%CD%\MAIN_res\password.txt")
-if exist "%CD%\MAIN_res\V.txt" (del "%CD%\MAIN_res\V.txt")
-echo %V%>"%CD%\MAIN_res\V.txt"
+echo %~dp0>"%CD%\%NAMEe%_res\Directory.txt"
+if not {%username%}=={} (echo %username%>"%CD%\%NAMEe%_res\username.txt")
+if not {%password%}=={} (echo %password%>"%CD%\%NAMEe%_res\password.txt")
+if exist "%CD%\%NAMEe%_res\V.txt" (del "%CD%\%NAMEe%_res\V.txt")
+echo %V%>"%CD%\%NAMEe%_res\V.txt"
+if /I {%MajorUpdate%}=={true} (
 echo.
-echo Done. :)  -  Enter Y if you would like to see the github update page and close.
+echo  Done. You might want to check out the page for the MAJOR UPDATE that just passed. Else you might not be able to take advantage of seomthing new^!
+start "" https://github.com/alexlyee/Unturned-Server-Manager/commits/master
+pause
+goto :exit
+)
+if exist "%CD%\%NAMEe%.key" (
+del /F /Q "%CD%\%NAMEe%.key"
+echo      .. Deleted startup key.
+)
+echo.
+echo  Done. :)  -  Enter Y if you would like to see the github update page and close.
 echo  Anything else to close.
 set "choice="
 set /p "choice= - Enter option: "
@@ -900,33 +976,37 @@ goto :exit
 :exit
 REM                                              Create log file. and proper exit. \/
 set count=0
-for /f "tokens=*" %%A in ('dir /b "%CD%\MAIN_res\logs"') do (
+for /f "tokens=*" %%A in ('dir /b "%CD%\%NAMEe%_res\logs"') do (
 	set /a "count=!count! + 1"
 	set "LogCount=!count!"
 )
 set "count=" & set /a "LogCount=%LogCount% + 1"
 set "LogName=Log%LogCount%"
 set /a "LogCount=%LogCount% - 1"
->"%CD%\MAIN_res\logs\%LogName%.log" echo -Log.Start
->>"%CD%\MAIN_res\logs\%LogName%.log" echo --Log.Dump.Start
+>"%CD%\%NAMEe%_res\logs\%LogName%.log" echo -Log.Start
+>>"%CD%\%NAMEe%_res\logs\%LogName%.log" echo --Log.Dump.Start
 for /f "tokens=*" %%A in ('set') do (
-	>>"%CD%\MAIN_res\logs\%LogName%.log" echo %%A
+	>>"%CD%\%NAMEe%_res\logs\%LogName%.log" echo %%A
 )
->>"%CD%\MAIN_res\logs\%LogName%.log" echo --Log.Dump.End
->>"%CD%\MAIN_res\logs\%LogName%.log" echo --Log.DumpDynamics.Start
->>"%CD%\MAIN_res\logs\%LogName%.log" echo CD=%CD%
->>"%CD%\MAIN_res\logs\%LogName%.log" echo DATE=%DATE%
->>"%CD%\MAIN_res\logs\%LogName%.log" echo TIME=%TIME%
->>"%CD%\MAIN_res\logs\%LogName%.log" echo RANDOM=%RANDOM%
->>"%CD%\MAIN_res\logs\%LogName%.log" echo ERRORLEVEL=%ERRORLEVEL%
->>"%CD%\MAIN_res\logs\%LogName%.log" echo CMDEXTVERSION=%CMDEXTVERSION%
->>"%CD%\MAIN_res\logs\%LogName%.log" echo CMDCMDLINE=%CMDCMDLINE%
->>"%CD%\MAIN_res\logs\%LogName%.log" echo HIGHESTNUMANODENUMBER=%HIGHESTNUMANODENUMBER%
->>"%CD%\MAIN_res\logs\%LogName%.log" echo --Log.DumpDynamics.End
->>"%CD%\MAIN_res\logs\%LogName%.log" echo --Log.CustomNotes.Start
->>"%CD%\MAIN_res\logs\%LogName%.log" echo V%V%
->>"%CD%\MAIN_res\logs\%LogName%.log" echo --Log.CustomNotes.End
->>"%CD%\MAIN_res\logs\%LogName%.log" echo -Log.End
+>>"%CD%\%NAMEe%_res\logs\%LogName%.log" echo --Log.Dump.End
+>>"%CD%\%NAMEe%_res\logs\%LogName%.log" echo --Log.DumpDynamics.Start
+>>"%CD%\%NAMEe%_res\logs\%LogName%.log" echo CD=%CD%
+>>"%CD%\%NAMEe%_res\logs\%LogName%.log" echo DATE=%DATE%
+>>"%CD%\%NAMEe%_res\logs\%LogName%.log" echo TIME=%TIME%
+>>"%CD%\%NAMEe%_res\logs\%LogName%.log" echo RANDOM=%RANDOM%
+>>"%CD%\%NAMEe%_res\logs\%LogName%.log" echo ERRORLEVEL=%ERRORLEVEL%
+>>"%CD%\%NAMEe%_res\logs\%LogName%.log" echo CMDEXTVERSION=%CMDEXTVERSION%
+>>"%CD%\%NAMEe%_res\logs\%LogName%.log" echo CMDCMDLINE=%CMDCMDLINE%
+>>"%CD%\%NAMEe%_res\logs\%LogName%.log" echo HIGHESTNUMANODENUMBER=%HIGHESTNUMANODENUMBER%
+>>"%CD%\%NAMEe%_res\logs\%LogName%.log" echo --Log.DumpDynamics.End
+>>"%CD%\%NAMEe%_res\logs\%LogName%.log" echo --Log.CustomNotes.Start
+>>"%CD%\%NAMEe%_res\logs\%LogName%.log" echo V%V%
+>>"%CD%\%NAMEe%_res\logs\%LogName%.log" echo --Log.CustomNotes.End
+>>"%CD%\%NAMEe%_res\logs\%LogName%.log" echo -Log.End
+if exist "%CD%\%NAMEe%.key" (
+del /F /Q "%CD%\%NAMEe%.key"
+echo      .. Deleted startup key.
+)
 exit "WellDone"
 
 REM GG!
@@ -941,26 +1021,63 @@ echo git init>>"%CD%\update.bat"
 echo git remote add master https://github.com/alexlyee/Unturned-Server-Manager>>"%CD%\update.bat"
 echo git pull --allow-unrelated-histories -f https://github.com/alexlyee/Unturned-Server-Manager master>>"%CD%\update.bat"
 echo @echo off>>"%CD%\update.bat"
-echo echo. & echo.>>"%CD%\update.bat"
+echo echo. >>"%CD%\update.bat"
 echo echo  /////////////////////////////////////// >>"%CD%\update.bat"
-echo echo  That should be it^! Take a look and see if that did it.>>"%CD%\update.bat"
+echo echo  We just installed the new update, to apply it, restart.>>"%CD%\update.bat"
 echo pause>>"%CD%\update.bat"
 echo del /F /Q "%CD%\update.bat">>"%CD%\update.bat"
-echo  Update script built. Running it.
+echo     .. Update script built. Running it.
 echo.
+if exist "%CD%\%NAMEe%.key" (
+del /F /Q "%CD%\%NAMEe%.key"
+echo      .. Deleted startup key.
+)
+echo.
+echo  // INSTALLING UPDATE...
 update.bat
 REM the script will never get here.
 goto :exit
 
+:MAINSync
+echo.
+echo  .. Applying update..
+echo.
+echo del /F /Q "%CD%\%NAMEe%.bat">"%CD%\update.bat"
+echo copy /Y "%CD%\MAIN.bat" "%CD%\%NAMEe%.bat">>"%CD%\update.bat"
+echo @echo off>>"%CD%\update.bat"
+echo echo. >>"%CD%\update.bat"
+echo echo  /////////////////////////////////////// >>"%CD%\update.bat"
+echo echo  We just applied the new update, have fun.>>"%CD%\update.bat"
+echo echo  Please press any key to finish correctly^! >>"%CD%\update.bat"
+echo pause^>nul >>"%CD%\update.bat"
+echo del /F /Q "%CD%\update.bat">>"%CD%\update.bat"
+echo     .. Update srcipt built. Running it.
+echo.
+if exist "%CD%\%NAMEe%.key" (
+del /F /Q "%CD%\%NAMEe%.key"
+echo      .. Deleted startup key.
+)
+echo.
+echo  // UPDATING APP...
+update.bat
+goto :exit
 
 :server
+if exist "%CD%\%NAMEe%.key" (
+del /F /Q "%CD%\%NAMEe%.key"
+echo      .. Deleted startup key.
+)
 echo.
 echo  -- Starting Server :) --
-start "Use command shutdown once done loading." /D "%CD%\unturned" /MAX /HIGH /WAIT "%CD%\unturned\Unturned.exe" -nographics -batchmode +%servertype%/ManagedServer
+start "Use command shutdown once done loading." /D "%CD%\unturned" /MAX /HIGH /WAIT "%CD%\unturned\Unturned.exe" -nographics -batchmode +%servertype%/%NAMEe%
 echo.
 goto :exit
 
 :InstallGIT
+if exist "%CD%\%NAMEe%.key" (
+del /F /Q "%CD%\%NAMEe%.key"
+echo      .. Deleted startup key.
+)
 echo.
 echo  Installing Git.
 echo  .. Git is used for updating this program automatically.
