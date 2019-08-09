@@ -13,27 +13,24 @@
 
 ## .... Current features:
 
-Fast deploy of an Unturned server using SteamCMD.
+*1. Fast deploy of an Unturned server using SteamCMD.
 
-Easy update of Unturned, Rocket, and all your plugins with one button!
+*2. Easy update of Unturned, Rocket, and all your plugins with one button!
 
-Clean organization of server files.
+*3. Clean organization of server files.
 
-Assists with all you need to get your server up and running.
+*4. Assists with all you need to get your server up and running.
 
-You must change all the server settings under "unturned\Servers\ManagedServer"
+*5. You must change all the server settings under "unturned\Servers\ManagedServer"
 
-Automatic port-forward
+*6. Automatic port-forwarding (This may be broken)
 
-Help-me-host
+*7. Help-me-host (This may be under construction)
 
-Manage multiple servers by copying the program for each server
+*8. Manage multiple servers by copying the program for each server
 
+*9. Automatic Updating system
 
 ## .... Future plans:
-
-Automatic Updating system.
-
-Multi-server managment tool.
 
 Fork to python or other language.
