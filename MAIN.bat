@@ -32,7 +32,7 @@ REM                                      2> Significant changes, need to redo fi
 REM                                      3> Minor changes, nothing needed.
 														set VMajor=3
 														set VMiddle=0
-														set VMinor=0
+														set VMinor=1
 set V=%VMajor%.%VMiddle%.%VMinor%
 title Untured Server Manager! V%V%
 setlocal EnableDelayedExpansion EnableExtensions
@@ -406,7 +406,11 @@ echo      .. Deleted startup key.
 echo.
 echo  Unturned Server Manager V%V%  //  Made by Alex Lindstrom (steam~ alexlyee)
 echo                                 // took %runtime%ms to startup.
-echo  Logged in to %owneremail% %ownersteamid%. Hosting server type %servertype%
+if /I {%servertype%}=={} (
+	echo Logged in to %owneremail% %ownersteamid%. Missing server type.
+) else (
+	echo  Logged in to %owneremail% %ownersteamid%. Hosting server type %servertype%
+)
 echo.
 if EXIST "%CD%\%NAMEe%_res\Hide.txt" goto :SkipYMenuMessage
 echo  Make sure you don't click inside of this program; whenever you select anything in CMD,
