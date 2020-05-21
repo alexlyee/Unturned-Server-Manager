@@ -1,7 +1,7 @@
 # Unturned-Server-Manager
 *A program for automatically deploying and updating an Unturned server on windows.*
 
-
+[![Swagger: Valid](https://img.shields.io/swagger/valid/3.0?specUrl=https%3A%2F%2Fraw.githubusercontent.com%2FOAI%2FOpenAPI-Specification%2Fmaster%2Fexamples%2Fv2.0%2Fjson%2Fpetstore-expanded.json)]
 
 
 - Built as a standalone program for my own server.
